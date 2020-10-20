@@ -21,6 +21,11 @@ RUN apt update -y && apt install -y \
 	python-dev \
 	bc \
 	ash \
+	curl \
+	gnat-5 \
+	libncurses5-dev \
+	m4 \
+	zlib1g-dev \
   && rm -rf /var/lib/apt/lists/*
 
 RUN /bin/ash -c 'set -ex && \
@@ -34,10 +39,6 @@ RUN /bin/ash -c 'set -ex && \
 WORKDIR /build
 VOLUME /out
 
-COPY . /build
-
-RUN find /build/ -type f -iname "*.sh" -exec chmod +x {} \;
-
 ARG DISTRO
 ENV DISTRO=${DISTRO}
 ARG PARTNUM
@@ -48,5 +49,8 @@ ENV CROSS_COMPILE=aarch64-linux-gnu-
 ENV ARCH=arm64
 ARG CPUS=2
 ENV CPUS=${CPUS}
+
+COPY . /build
+RUN find /build/ -type f -iname "*.sh" -exec chmod +x {} \;
 
 CMD /build/scripts/entrypoint.sh /out

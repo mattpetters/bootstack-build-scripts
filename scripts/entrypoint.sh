@@ -6,7 +6,6 @@ out="$(realpath "${@:$#}")"
 _repo_dir="$(dirname "$(dirname "$(readlink -f $0)")")"
 _script_dir="$(dirname "$(readlink -f $0)")"
 
-
 [[ ! -d "${out}" ]] && \
 	echo "${out} is not a valid directory! Exiting.." && exit 1
 
@@ -27,8 +26,8 @@ source "${_script_dir}/uboot/build_uboot.sh" "${out}"
 echo -e "\n\t\tBuilding cbfstool\n"
 source "${_script_dir}/coreboot/build_cbfstool.sh" "${out}"
 
-echo -e "\n\t\tUpdating Coreboot\n"
-source "${_script_dir}/coreboot/update-coreboot.sh" "${_repo_dir}/src/coreboot.rom" "${out}/u-boot.elf" "${out}"
+echo -e "\n\t\tBuilding Coreboot\n"
+source "${_script_dir}/coreboot/build_coreboot.sh" "${out}"
 
 echo -e "\n\t\tBuilding U-Boot scripts\n"
 source "${_script_dir}/uboot/build_uboot_scripts.sh" "${out}"
@@ -39,16 +38,21 @@ source "${_script_dir}/initramfs/build_initramfs.sh" "${out}"
 echo -e "\n\t\tCopying bootfiles to target directory\n"
 mkdir -p "${out}/switchroot/${DISTRO}/overlays/" "${out}/bootloader/ini/"
 
-# Copy hekate ini
-cp "${_repo_dir}/src/hekate_ini/L4T-${DISTRO}.ini" "${out}/bootloader/ini/"
+# Create hekate_ini in bootloader directory
+echo -e "[L4T ${DISTRO}]\n
+payload=switchroot/${DISTRO}/coreboot.rom\n
+id=SWR-${DISTRO}\n
+icon=switchroot/arch/icon_${DISTRO}_hue.bmp\n
+logopath=switchroot/${DISTRO}/bootlogo_${DISTRO}.bmp" > "${out}/bootloader/ini/L4T-${DISTRO}.ini"
 
 # Copy overlays, uenv.txt, uenv_readme.txt and coreboot.rom
-cp -r "${_repo_dir}/src/uboot-scripts/overlays/" "${_repo_dir}/src/uboot-scripts/uenv.txt" "${_repo_dir}/src/uboot-scripts/uenv_readme.txt" "${_repo_dir}/src/coreboot.rom" "${out}/switchroot/${DISTRO}"
-
-# Move builded files to switchroot distro directory
-mv "${out}/initramfs" "${out}/boot.scr" "${out}/switchroot/${DISTRO}"
-
-# Clean build files
-rm "${out}/u-boot.elf"
+# To switchroot distro directory
+mv "${out}/initramfs" \
+	"${out}/coreboot.rom" \
+	"${out}/boot.scr" \
+	"${_repo_dir}/src/uboot-scripts/overlays/" \
+	"${_repo_dir}/src/uboot-scripts/uenv.txt" \
+	"${_repo_dir}/src/uboot-scripts/uenv_readme.txt" \
+	"${out}/switchroot/${DISTRO}"
 
 echo -e "\n\t\tDone building !\n"

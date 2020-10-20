@@ -1,6 +1,6 @@
 #!/bin/bash
 out="$(realpath "${@:$#}")"
-uboot_dir="$(dirname "$(dirname "$(dirname "${BASH_SOURCE[0]}")")")"/src/switch-uboot/
+uboot_branch="linux-norebase"
 
 [[ -z ${DISTRO} ]] && \
 	echo "Nothing set for DISTRO variable..Exiting." && exit 1
@@ -16,12 +16,13 @@ if [[ -n "${CPUS}" ]]; then
 	fi
 fi
 
-cd "${uboot_dir}"
+if [[ ! -d "${out}/switch-uboot" ]]; then
+	echo -e "\n\t\tCloning switch-uboot, branch: ${uboot_branch}"
+	git clone -b ${uboot_branch} https://gitlab.com/switchroot/bootstack/switch-uboot "${out}/switch-uboot/"
+fi
+
+cd "${out}/switch-uboot"
 git submodule update --init --recursive .
-
-sed -i 's/boot_prefixes=\/ \/switchroot\/.*\/\\0/boot_prefixes=\/ \/switchroot\/'${DISTRO}'\/\\0/' "${uboot_dir}/include/config_distro_bootcmd.h"
-
+sed -i 's/boot_prefixes=\/ \/switchroot\/.*\/\\0/boot_prefixes=\/ \/switchroot\/'${DISTRO}'\/\\0/' "${out}/switch-uboot/include/config_distro_bootcmd.h"
 make nintendo-switch_defconfig
 make -j"${CPUS}"
-
-cp u-boot.elf "${out}"
