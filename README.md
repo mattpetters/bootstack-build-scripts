@@ -19,7 +19,7 @@ mkdir -p "${PWD}"/out
 
 Run the docker container to trigger the actuall build :
 ```sh
-docker run -it --rm -e CPUS=$(nproc) -e DISTRO=focal -e PARTNUM=mmcblk0p2 -v "${PWD}"/out:/out alizkan/l4t-bootfiles-misc:latest
+docker run -it --rm -e CPUS=$(nproc) -e DEVICE=tegra210 -e DISTRO=focal -e PARTNUM=mmcblk0p2 -v "${PWD}"/out:/out alizkan/l4t-bootfiles-misc:latest
 ```
 
 ## Manual build
