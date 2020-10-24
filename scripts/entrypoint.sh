@@ -10,8 +10,8 @@ _script_dir="$(dirname "$(readlink -f $0)")"
 	echo "${out} is not a valid directory! Exiting.." && exit 1
 
 # Multiple variable check
-[[ -z ${DISTRO} || -z "${HEKATE_ID}" || -z ${PARTNUM} ]] && \
-	echo "Variable not set correctly: DISTRO=${DISTRO} HEKATE_ID=${HEKATE_ID} PARTNUM=${PARTNUM} ! Exiting." && exit 1
+[[ -z ${DISTRO} || -z ${PARTNUM} ]] && \
+	echo "Variable not set correctly: DISTRO=${DISTRO} PARTNUM=${PARTNUM} ! Exiting." && exit 1
 
 if [[ -n "${CPUS}" ]]; then
 	if [[ ! "${CPUS}" =~ ^[0-9]{,2}$ || "${CPUS}" > $(nproc)  ]]; then
