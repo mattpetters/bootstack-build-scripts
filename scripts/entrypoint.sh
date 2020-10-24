@@ -41,7 +41,7 @@ mkdir -p "${out}/switchroot/${DISTRO}/overlays/" "${out}/bootloader/ini/"
 # Create hekate_ini in bootloader directory
 echo -e "[L4T ${DISTRO}]\n
 payload=switchroot/${DISTRO}/coreboot.rom\n
-id=SWR-${DISTRO}\n
+id=SWR-`echo ${DISTRO:0:3} | tr '[:lower:]' '[:upper:]'`\n
 icon=switchroot/arch/icon_${DISTRO}_hue.bmp\n
 logopath=switchroot/${DISTRO}/bootlogo_${DISTRO}.bmp" > "${out}/bootloader/ini/L4T-${DISTRO}.ini"
 
