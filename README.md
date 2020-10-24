@@ -17,9 +17,9 @@ Create a directory to store build files and kernel files.
 mkdir -p "${PWD}"/out
 ```
 
-Run the docker contaainer to trigger the actuall build :
+Run the docker container to trigger the actuall build :
 ```sh
-docker run -it --rm -e DISTRO=focal -e PARTNUM=mmcblk0p2 -e HEKATE_ID=SWR-FOC -v "${PWD}"/out:/out alizkan/l4t-bootfiles-misc:latest
+docker run -it --rm -e CPUS=$(nproc) -e DISTRO=focal -e PARTNUM=mmcblk0p2 -v "${PWD}"/out:/out alizkan/l4t-bootfiles-misc:latest
 ```
 
 ## Manual build
@@ -93,12 +93,4 @@ dtc -I dts -O dtb -o tegra210-icosa_emmc-overlay.dtbo emmc_overlay.dts
 
 ```sh
 dtc -I dts -O dtb -o tegra210-icosa-UART-B-overlay.dtbo uart_b_debug.dts
-```
-
-### More infos
-
-Rebuild Dockerfile:
-
-```sh
-./scripts/docker/build_image.sh
 ```
