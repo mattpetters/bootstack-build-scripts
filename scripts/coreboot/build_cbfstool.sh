@@ -1,7 +1,7 @@
 #!/bin/bash
 _cwd=$(pwd)
 out="$(realpath "${@:$#}")"
-coreboot_branch="switch-proper-vpr"
+coreboot_branch="switch"
 
 [[ ! -d "${out}" ]] && \
 	echo "${out} is not a valid directory! Exiting.." && exit 1
