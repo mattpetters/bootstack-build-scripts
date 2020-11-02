@@ -161,25 +161,6 @@ else
 	boot_dev_found="true";
 fi;
 
-if [[ ${boot_dev_found} == "true" ]] && [[ $(sed -e 's/.*skip_extract=//' -e 's/\s.*$//' /proc/cmdline) != 1 ]]; then
-	SWR_DIR=$(sed -e 's/.*swr_dir=//' -e 's/\s.*$//' /proc/cmdline);
-	if [[ -n ${SWR_DIR} ]]; then
-		if [[ -f /mnt/boot/switchroot/${SWR_DIR}/modules.tar.gz ]]; then
-			echo "Deleting old modules";
-			rm -r /mnt/lib/modules/*;
-			echo "Extracting new modules";
-			tar -hxpf /mnt/boot/switchroot/${SWR_DIR}/modules.tar.gz -C /mnt/lib/;
-			if [ $? -eq 0 ]; then rm /mnt/boot/switchroot/${SWR_DIR}/modules.tar.gz; echo "Extract success"; fi
-		fi
-
-		if [[ -f /mnt/boot/switchroot/${SWR_DIR}/update.tar.gz ]]; then
-			echo "Extracting update.tar.gz";
-			tar -hxpf /mnt/boot/switchroot/${SWR_DIR}/update.tar.gz -C /mnt/;
-			if [ $? -eq 0 ]; then rm /mnt/boot/switchroot/${SWR_DIR}/update.tar.gz; echo "Extract success"; fi
-		fi
-	fi
-fi
-
 echo "[ $(date +"%T.%3N") ] Set Up Joycon stuff"
 # Create Fallback Bluetooth MAC
 BT_MAC_ADDR=$(sed -e "s/^"0x"//" /sys/block/mmcblk0/device/serial)
