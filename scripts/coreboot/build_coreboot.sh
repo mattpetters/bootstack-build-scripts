@@ -1,6 +1,6 @@
 #!/bin/bash
 out="$(realpath "${@:$#}")"
-coreboot_branch="switch-proper-vpr"
+coreboot_branch="switch"
 
 if [[ ! -d $out ]]; then
 	echo "No directory given, exiting..."
