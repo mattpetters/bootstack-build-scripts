@@ -39,11 +39,13 @@ echo -e "\n\t\tCopying bootfiles to target directory\n"
 mkdir -p "${out}/switchroot/${DISTRO}/overlays/" "${out}/bootloader/ini/"
 
 # Create hekate_ini in bootloader directory
-echo -e "[L4T ${DISTRO}]\n
-payload=switchroot/${DISTRO}/coreboot.rom\n
-id=SWR-`echo ${DISTRO:0:3} | tr '[:lower:]' '[:upper:]'`\n
-icon=switchroot/arch/icon_${DISTRO}_hue.bmp\n
-logopath=switchroot/${DISTRO}/bootlogo_${DISTRO}.bmp" > "${out}/bootloader/ini/L4T-${DISTRO}.ini"
+{
+       	echo "[L4T ${DISTRO}]"
+	echo "payload=switchroot/${DISTRO}/coreboot.rom"
+	echo "id=SWR-`echo ${DISTRO:0:3} | tr '[:lower:]' '[:upper:]'`"
+	echo "icon=switchroot/arch/icon_${DISTRO}_hue.bmp"
+	echo "logopath=switchroot/${DISTRO}/bootlogo_${DISTRO}.bmp"
+} > "${out}/bootloader/ini/L4T-${DISTRO}.ini"
 
 # Copy overlays, uenv.txt, uenv_readme.txt and coreboot.rom
 # To switchroot distro directory
