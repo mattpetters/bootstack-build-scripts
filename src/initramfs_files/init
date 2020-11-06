@@ -361,12 +361,6 @@ fi
 # Patch bluez config to enable fast connect, required or joycon wont connect
 sed -i 's/#FastConnectable = false/FastConnectable = true/' /mnt/etc/bluetooth/main.conf
 
-# Bluetooth audio fix
-sed -i 's/ExecStart=\/usr\/lib\/bluetooth\/bluetoothd -d*/ExecStart=\/usr\/lib\/bluetooth\/bluetoothd -d/g' /mnt/usr/lib/systemd/system/bluetooth.service.d/nv-bluetooth-service.conf
-
-# Fix USB Gadget
-sed -i 's/^[^#]*cp -r \/proc\/device-tree\/chosen\/plugin-manager \"${mntpoint}\/version\/plugin-manager\"/#&/' /mnt/opt/nvidia/l4t-usb-device-mode/nv-l4t-usb-device-mode-start.sh
-
 # Set initlogo
 if [ -e "/initlogo.raw" ]; then
 	echo 4 > /sys/class/graphics/fb0/blank;
