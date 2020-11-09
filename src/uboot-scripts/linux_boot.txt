@@ -21,7 +21,7 @@ if load mmc ${mmc_index}:1 ${fdtovaddr} switchroot/${linux_dir}/uenv.txt && env 
 	    echo overlaying ${ov}...
 		fdt resize 8192
 
-		if load mmc ${mmc_index}:1 ${ovcfgaddr} switchroot/${linux_dir}/overlays/${ov}.dtbo && fdt apply ${ovcfgaddr}; then
+		if load mmc ${mmc_index}:1 ${ovcfgaddr} switchroot/overlays/${ov}.dtbo && fdt apply ${ovcfgaddr}; then
 			echo Successfully loaded ${ov}.dtbo...
 
 			# Add additional bootargs for UART-B
@@ -36,7 +36,7 @@ if load mmc ${mmc_index}:1 ${fdtovaddr} switchroot/${linux_dir}/uenv.txt && env 
 
 		# Override and launch nfs bootargs here
 		if test ${ov} = nfs; then
-			if load mmc ${mmc_index}:1 ${evtmpaddr} switchroot/${linux_dir}/overlays/nfs.txt && env import -t ${evtmpaddr} ${filesize}; then
+			if load mmc ${mmc_index}:1 ${evtmpaddr} switchroot/overlays/nfs.txt && env import -t ${evtmpaddr} ${filesize}; then
 				run nfsargs_run
 				echo Using NFS root
 			fi
