@@ -35,10 +35,12 @@ source "${_script_dir}/uboot/build_uboot_scripts.sh" "${out}"
 echo -e "\n\t\tBuilding Initramfs\n"
 source "${_script_dir}/initramfs/build_initramfs.sh" "${out}"
 
-echo -e "\n\t\tCopying bootfiles to target directory\n"
-mkdir -p "${out}/switchroot/${DISTRO}/overlays/" "${out}/bootloader/ini/"
+echo -e "\n\t\tBuilding Device Tree overlays\n"
+source "${_script_dir}/device-tree/build_overlays.sh" "${out}"
 
-# Create hekate_ini in bootloader directory
+mkdir -p "${out}/switchroot/overlays/" "${out}/bootloader/ini/"
+
+echo -e "\n\t\tCreate hekate_ini in bootloader directory\n"
 {
        	echo "[L4T ${DISTRO}]"
 	echo "payload=switchroot/${DISTRO}/coreboot.rom"
@@ -47,14 +49,14 @@ mkdir -p "${out}/switchroot/${DISTRO}/overlays/" "${out}/bootloader/ini/"
 	echo "logopath=switchroot/${DISTRO}/bootlogo_${DISTRO}.bmp"
 } > "${out}/bootloader/ini/L4T-${DISTRO}.ini"
 
-# Copy overlays, uenv.txt, uenv_readme.txt and coreboot.rom
-# To switchroot distro directory
+echo -e "\n\t\tCopying bootfiles to target directory\n"
 mv "${out}/initramfs" \
 	"${out}/coreboot.rom" \
 	"${out}/boot.scr" \
-	"${_repo_dir}/src/uboot-scripts/overlays/" \
 	"${_repo_dir}/src/uboot-scripts/uenv.txt" \
 	"${_repo_dir}/src/uboot-scripts/uenv_readme.txt" \
 	"${out}/switchroot/${DISTRO}"
+
+mv "${_repo_dir}/src/uboot-scripts/overlays/" "${out}/switchroot/"
 
 echo -e "\n\t\tDone building !\n"
