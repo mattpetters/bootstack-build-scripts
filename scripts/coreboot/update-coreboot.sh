@@ -9,7 +9,7 @@ fi
 COREBOOT=${1:-/boot/coreboot.rom}
 UBOOT=${2:-/usr/share/u-boot/u-boot.elf}
 out="$(realpath "${@:$#}")"
-coreboot_dir="$(dirname "$(readlink -fm "$0")")"
+coreboot_dir="$(dirname "${BASH_SOURCE[0]}")"
 
 if ! [ -f "$COREBOOT" ]; then
 	echo "$COREBOOT is not a valid file"

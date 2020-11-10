@@ -1,6 +1,6 @@
 #!/bin/bash
 out=$(realpath "${@:$#}")
-scripts_dir="$(dirname "$(dirname "$(dirname "$(readlink -fm "$0")")")")"/src/uboot-scripts
+scripts_dir="$(dirname "$(dirname "$(dirname "${BASH_SOURCE[0]}")")")"/src/uboot-scripts
 
 [[ ! -d "${out}" ]] && \
 	echo "${out} is not a valid directory! Exiting.." && exit 1
