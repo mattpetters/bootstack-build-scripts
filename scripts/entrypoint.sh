@@ -38,7 +38,7 @@ source "${_script_dir}/initramfs/build_initramfs.sh" "${out}"
 echo -e "\n\t\tBuilding Device Tree overlays\n"
 source "${_script_dir}/device-tree/build_overlays.sh" "${out}"
 
-mkdir -p "${out}/switchroot/overlays/" "${out}/bootloader/ini/"
+mkdir -p "${out}/switchroot/overlays/" "${out}/switchroot/${DISTRO}" "${out}/bootloader/ini/"
 
 echo -e "\n\t\tCreate hekate_ini in bootloader directory\n"
 {
