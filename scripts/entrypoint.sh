@@ -57,6 +57,4 @@ mv "${out}/initramfs" \
 	"${_repo_dir}/src/uboot-scripts/uenv_readme.txt" \
 	"${out}/switchroot/${DISTRO}"
 
-mv "${_repo_dir}/src/uboot-scripts/overlays/" "${out}/switchroot/"
-
 echo -e "\n\t\tDone building !\n"

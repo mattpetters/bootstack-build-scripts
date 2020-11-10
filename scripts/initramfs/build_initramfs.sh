@@ -1,6 +1,6 @@
 #!/bin/bash
 out=$(realpath "${@:$#}")
-initramfs_dir="$(dirname "$(dirname "$(dirname "${BASH_SOURCE[0]}")")")"/src/
+initramfs_dir="$(dirname "$(dirname "$(dirname "$(readlink -fm "$0")")")")"/src/
 
 [[ ! -d "${out}" ]] && \
 	echo "${out} is not a valid directory! Exiting.." && exit 1
