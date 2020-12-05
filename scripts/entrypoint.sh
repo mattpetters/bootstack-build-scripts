@@ -3,15 +3,17 @@ set -e
 
 # Use last argument as output directory
 out="$(realpath "${@:$#}")"
-_repo_dir="$(dirname "$(dirname "$(readlink -f $0)")")"
-_script_dir="$(dirname "$(readlink -f $0)")"
+script_dir="$(dirname "$(readlink -f $0)")"
+repo_dir="$(dirname "$(dirname "$(readlink -f $0)")")"
+uboot_dir="${repo_dir}/src/uboot-scripts"
+coreboot_branch="switch"
+uboot_branch="linux-norebase"
 
 [[ ! -d "${out}" ]] && \
 	echo "${out} is not a valid directory! Exiting.." && exit 1
 
-# Multiple variable check
-[[ -z ${DISTRO} || -z ${PARTNUM} ]] && \
-	echo "Variable not set correctly: DISTRO=${DISTRO} PARTNUM=${PARTNUM} ! Exiting." && exit 1
+[[ -z ${DISTRO} ]] && \
+	echo "DISTRO=${DISTRO} not set correctly ! Exiting." && exit 1
 
 if [[ -n "${CPUS}" ]]; then
 	if [[ ! "${CPUS}" =~ ^[0-9]{,2}$ || "${CPUS}" > $(nproc)  ]]; then
@@ -20,39 +22,79 @@ if [[ -n "${CPUS}" ]]; then
 	fi
 fi
 
-echo -e "\n\t\tBuilding U-Boot\n"
-source "${_script_dir}/uboot/build_uboot.sh" "${out}"
+mkdir -p "${out}/switchroot/overlays/" \
+	"${out}/switchroot/${DISTRO}" \
+	"${out}/bootloader/ini/"
 
-echo -e "\n\t\tBuilding cbfstool\n"
-source "${_script_dir}/coreboot/build_cbfstool.sh" "${out}"
+echo -e "\n\t\tBuilding U-Boot\n"
+if [[ ! -d "${out}/switch-uboot" ]]; then
+	echo -e "\n\t\tCloning switch-uboot, branch: ${uboot_branch}"
+	git clone -b ${uboot_branch} https://gitlab.com/switchroot/bootstack/switch-uboot "${out}/switch-uboot/"
+fi
+
+cd "${out}/switch-uboot"
+git submodule update --init --recursive .
+sed -i 's/boot_prefixes=\/ \/switchroot\/.*\/\\0/boot_prefixes=\/ \/switchroot\/'${DISTRO}'\/\\0/' "${out}/switch-uboot/include/config_distro_bootcmd.h"
+make nintendo-switch_defconfig
+make -j"${CPUS}"
 
 echo -e "\n\t\tBuilding Coreboot\n"
-source "${_script_dir}/coreboot/build_coreboot.sh" "${out}"
+if [[ ! -d "${out}/switch-coreboot" ]]; then
+	echo -e "\n\t\tCloning switch-coreboot, branch: ${coreboot_branch}"
+	git clone -b ${coreboot_branch} https://gitlab.com/switchroot/bootstack/switch-coreboot "${out}/switch-coreboot/"
+fi
+
+cd "${out}/switch-coreboot/"
+git submodule update --init --recursive .
+
+make crossgcc-arm CPUS=$CPUS
+make crossgcc-aarch64 CPUS=$CPUS
+
+make nintendo_switch_defconfig
+make iasl
+
+# Important won't build with more threads...
+make -j2
+
+mv build/coreboot.rom "${out}/switchroot/${DISTRO}"
 
 echo -e "\n\t\tBuilding U-Boot scripts\n"
-source "${_script_dir}/uboot/build_uboot_scripts.sh" "${out}"
+sed -i 's/^setenv ini .*$/setenv ini L4T-'${DISTRO}'\.ini/' "${uboot_dir}/linux_boot.txt"
+mkimage -V && mkimage -A arm -T script -O linux -d "${uboot_dir}/linux_boot.txt" "${out}/switchroot/${DISTRO}/boot.scr"
 
-echo -e "\n\t\tBuilding Initramfs\n"
-source "${_script_dir}/initramfs/build_initramfs.sh" "${out}"
+dtc -I dts -O dtb -o "${overlays}/tegra210-icosa_emmc-overlay.dtbo" "${out}/overlays/emmc_overlay.dts"
+dtc -I dts -O dtb -o "${overlays}/tegra210-icosa-UART-B-overlay.dtbo" "${out}/overlays/uart_b_debug.dts"
 
 echo -e "\n\t\tCopying bootfiles to target directory\n"
-mkdir -p "${out}/switchroot/${DISTRO}/overlays/" "${out}/bootloader/ini/"
-
 # Create hekate_ini in bootloader directory
-echo -e "[L4T ${DISTRO}]\n
-payload=switchroot/${DISTRO}/coreboot.rom\n
-id=SWR-`echo ${DISTRO:0:3} | tr '[:lower:]' '[:upper:]'`\n
-icon=switchroot/arch/icon_${DISTRO}_hue.bmp\n
-logopath=switchroot/${DISTRO}/bootlogo_${DISTRO}.bmp" > "${out}/bootloader/ini/L4T-${DISTRO}.ini"
+echo -e "[L4T ${DISTRO}]
+payload=switchroot/${DISTRO}/coreboot.rom
+id=SWR-`echo ${DISTRO:0:3} | tr '[:lower:]' '[:upper:]'`
+icon=switchroot/${DISTRO}/icon_${DISTRO}_hue.bmp
+logopath=switchroot/${DISTRO}/bootlogo_${DISTRO}.bmp
+overlays=
+rootdev=mmcblk0p2
+device=mmc
+root_mmc_index=0
+part_num=2
+runlevel=2
+rootlabel_retries=1
+skip_extract=0
+hdmi_fbconsole=1
+usblogging=console=ttyGS0,115200,8n1
+uartb=no_console_suspend console=ttyS1,115200,8n1 earlycon=tegra_comb_uart,mmio32,0x70006040
+kernelcmd_run=setenv bootargs \${bootargs_extra} \"root=/dev/\${rootdev} rootfstype=ext4 rw access=m2 \\
+firmware_class.path=/lib/firmware/ \\
+rootlabel_retries=\${rootlabel_retries} \\
+skip_extract=\${skip_extract} \\
+fbcon=primary:\${hdmi_fbconsole} fbcon=rotate:3 \\
+consoleblank=0 zswap.zpool=smalloc \\
+tegra_fbmem=0x0@0x1 vpr_resize \\
+nvdec_enabled=0 pmc_reboot2payload.enabled=1 \\
+pmc_reboot2payload.reboot_action=bootloader \\
+pmc_reboot2payload.default_payload=reboot_payload.bin \\
+pmc_reboot2payload.hekate_config_id=\${id} \"" > "${out}/bootloader/ini/L4T-${DISTRO}.ini"
 
-# Copy overlays, uenv.txt, uenv_readme.txt and coreboot.rom
-# To switchroot distro directory
-mv "${out}/initramfs" \
-	"${out}/coreboot.rom" \
-	"${out}/boot.scr" \
-	"${_repo_dir}/src/uboot-scripts/overlays/" \
-	"${_repo_dir}/src/uboot-scripts/uenv.txt" \
-	"${_repo_dir}/src/uboot-scripts/uenv_readme.txt" \
-	"${out}/switchroot/${DISTRO}"
+mv "${uboot_dir}/uenv_readme.txt" "${out}/switchroot/${DISTRO}"
 
 echo -e "\n\t\tDone building !\n"
