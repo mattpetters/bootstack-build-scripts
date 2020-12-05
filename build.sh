@@ -3,9 +3,6 @@ set -e
 
 # Use last argument as output directory
 out="$(realpath "${@:$#}")"
-script_dir="$(dirname "$(readlink -f $0)")"
-repo_dir="$(dirname "$(dirname "$(readlink -f $0)")")"
-uboot_dir="${repo_dir}/src/uboot-scripts"
 coreboot_branch="switch"
 uboot_branch="linux-norebase"
 
@@ -25,6 +22,8 @@ fi
 mkdir -p "${out}/switchroot/overlays/" \
 	"${out}/switchroot/${DISTRO}" \
 	"${out}/bootloader/ini/"
+
+cp uenv_readme.txt "${out}/switchroot/${DISTRO}"
 
 echo -e "\n\t\tBuilding U-Boot\n"
 if [[ ! -d "${out}/switch-uboot" ]]; then
@@ -59,14 +58,10 @@ make -j2
 mv build/coreboot.rom "${out}/switchroot/${DISTRO}"
 
 echo -e "\n\t\tBuilding U-Boot scripts\n"
-sed -i 's/^setenv ini .*$/setenv ini L4T-'${DISTRO}'\.ini/' "${uboot_dir}/linux_boot.txt"
-mkimage -V && mkimage -A arm -T script -O linux -d "${uboot_dir}/linux_boot.txt" "${out}/switchroot/${DISTRO}/boot.scr"
+sed -i 's/^setenv ini .*$/setenv ini L4T-'${DISTRO}'\.ini/' linux_boot.txt
+mkimage -V && mkimage -A arm -T script -O linux -d linux_boot.txt "${out}/switchroot/${DISTRO}/boot.scr"
 
-dtc -I dts -O dtb -o "${overlays}/tegra210-icosa_emmc-overlay.dtbo" "${out}/overlays/emmc_overlay.dts"
-dtc -I dts -O dtb -o "${overlays}/tegra210-icosa-UART-B-overlay.dtbo" "${out}/overlays/uart_b_debug.dts"
-
-echo -e "\n\t\tCopying bootfiles to target directory\n"
-# Create hekate_ini in bootloader directory
+echo -e "\n\t\tCreate hekate_ini in bootloader directory\n"
 echo -e "[L4T ${DISTRO}]
 payload=switchroot/${DISTRO}/coreboot.rom
 id=SWR-`echo ${DISTRO:0:3} | tr '[:lower:]' '[:upper:]'`
@@ -94,7 +89,5 @@ nvdec_enabled=0 pmc_reboot2payload.enabled=1 \\
 pmc_reboot2payload.reboot_action=bootloader \\
 pmc_reboot2payload.default_payload=reboot_payload.bin \\
 pmc_reboot2payload.hekate_config_id=\${id} \"" > "${out}/bootloader/ini/L4T-${DISTRO}.ini"
-
-mv "${uboot_dir}/uenv_readme.txt" "${out}/switchroot/${DISTRO}"
 
 echo -e "\n\t\tDone building !\n"
