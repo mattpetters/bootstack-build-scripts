@@ -2,9 +2,8 @@ setenv ini L4T-bionic.ini
 setenv ovcfgaddr 0x8d100000
 setenv fdtovaddr 0x8d200000
 setenv evtmpaddr 0x8d300000
-setenv iniaddr   0x8d400000
 
-if load mmc 1:1 ${iniaddr} bootloader/ini/${ini} && env import -t ${iniaddr} ${filesize}; then
+if load mmc 1:1 ${fdtovaddr} bootloader/ini/${ini} && env import -t ${fdtovaddr} ${filesize}; then
         if test -n ${device}; then echo device type ${device};
         else reset; fi;
 
