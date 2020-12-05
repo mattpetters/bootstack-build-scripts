@@ -1,0 +1,42 @@
+stages:
+  - dependency_build
+  - build
+
+include:
+  - local: .gitlab/templates/build_docker_ci_images.yml
+  - local: .gitlab/templates/build_bootstack.yml
+
+arch-build:
+  extends: .build
+  variables:
+    DISTRO: arch
+
+bionic-build:
+  extends: .build
+  variables:
+    DISTRO: bionic
+
+centos-build:
+  extends: .build
+  variables:
+    DISTRO: centos
+
+debian-build:
+  extends: .build
+  variables:
+    DISTRO: debian
+
+focal-build:
+  extends: .build
+  variables:
+    DISTRO: focal
+
+groovy-build:
+  extends: .build
+  variables:
+    DISTRO: groovy
+
+tumbleweed-build:
+  extends: .build
+  variables:
+    DISTRO: tumbleweed

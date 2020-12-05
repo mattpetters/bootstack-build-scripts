@@ -1,0 +1,11 @@
+.build:
+  tags:
+    - pegasus
+  image: registry.gitlab.com/switchroot/bootstack/bootstack-build-scripts
+  stage: build
+  variables:
+    DISTRO: ""
+  services:
+    - docker:dind
+  script:
+    - DISTRO=${DISTRO} CPUS=$(nproc) ./build.sh out/
