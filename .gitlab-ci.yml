@@ -2,6 +2,9 @@ stages:
   - dependency_build
   - build
 
+before_script:
+  - mkdir -p out/
+
 include:
   - local: .gitlab/templates/build_docker_ci_images.yml
   - local: .gitlab/templates/build_bootstack.yml
