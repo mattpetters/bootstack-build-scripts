@@ -1,7 +1,7 @@
 .build:
   tags:
     - pegasus
-  image: registry.gitlab.com/switchroot/bootstack/bootstack-build-scripts
+  image: "$CI_REGISTRY_IMAGE"
   stage: build
   variables:
     DISTRO: ""
@@ -9,4 +9,5 @@
   services:
     - docker:dind
   script:
-    - DISTRO=${DISTRO} CPUS=$(nproc) ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- ./build.sh out/
+    - export CPUS=$(nproc) ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu-
+    - DISTRO=${DISTRO} ./build.sh out/
