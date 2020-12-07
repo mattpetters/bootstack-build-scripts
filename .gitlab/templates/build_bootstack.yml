@@ -5,9 +5,7 @@
   stage: build
   variables:
     DISTRO: ""
-    CROSS_COMPILE: aarch64-linux-gnu-
   services:
     - docker:dind
   script:
-    - export CPUS=$(nproc) ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu-
-    - DISTRO=${DISTRO} ./build.sh out/
+    - CPUS=$(nproc) ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- DISTRO=${DISTRO} ./build.sh out/
