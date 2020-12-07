@@ -66,9 +66,8 @@ echo -e "[L4T ${DISTRO}]
 payload=switchroot/${DISTRO}/coreboot.rom
 id=SWR-`echo ${DISTRO:0:3} | tr '[:lower:]' '[:upper:]'`
 icon=switchroot/${DISTRO}/icon_${DISTRO}_hue.bmp
-logopath=switchroot/${DISTRO}/bootlogo_${DISTRO}.bmp" > "${out}/bootloader/ini/L4T-${DISTRO}.ini"
-
-echo -e "overlays=
+logopath=switchroot/${DISTRO}/bootlogo_${DISTRO}.bmp
+overlays=
 rootdev=mmcblk0p2
 device=mmc
 root_mmc_index=0
@@ -89,6 +88,6 @@ tegra_fbmem=0x0@0x1 vpr_resize \\
 nvdec_enabled=0 pmc_reboot2payload.enabled=1 \\
 pmc_reboot2payload.reboot_action=bootloader \\
 pmc_reboot2payload.default_payload=reboot_payload.bin \\
-pmc_reboot2payload.hekate_config_id=\${id} \"" > "${out}/switchroot/${DISTRO}/uenv.txt"
+pmc_reboot2payload.hekate_config_id=\${id} \"" > "${out}/bootloader/ini/L4T-${DISTRO}.ini"
 
 echo -e "\n\t\tDone building !\n"
