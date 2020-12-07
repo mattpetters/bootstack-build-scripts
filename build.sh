@@ -12,13 +12,6 @@ uboot_branch="linux-norebase"
 [[ -z ${DISTRO} ]] && \
 	echo "DISTRO=${DISTRO} not set correctly ! Exiting." && exit 1
 
-if [[ -n "${CPUS}" ]]; then
-	if [[ ! "${CPUS}" =~ ^[0-9]{,2}$ || "${CPUS}" > $(nproc)  ]]; then
-		echo "${CPUS} cores out of range or invalid, CPUS cores avalaible: $(nproc) ! Exiting..."
-		exit 1
-	fi
-fi
-
 mkdir -p "${out}/switchroot/overlays/" \
 	"${out}/switchroot/${DISTRO}" \
 	"${out}/bootloader/ini/"
