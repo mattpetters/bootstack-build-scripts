@@ -5,7 +5,5 @@
   stage: build
   variables:
     DISTRO: ""
-  services:
-    - docker:dind
   script:
     - CPUS=$(nproc) ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- DISTRO=${DISTRO} ./build.sh out/
