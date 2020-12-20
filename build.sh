@@ -2,9 +2,13 @@
 set -e
 
 # Use last argument as output directory
+cwd="$(realpath "$(dirname "${BASH_SOURCE[0]}")")"
 out="$(realpath "${@:$#}")"
 coreboot_branch="switch"
 uboot_branch="linux-norebase"
+export ARCH=${ARCH:-"arm64"}
+export CROSS_COMPILE=${CROSS_COMPILE:-"aarch64-linux-gnu-"}
+export CPUS=${CPUS:-$(($(nproc) - 1))}
 
 [[ ! -d "${out}" ]] && \
 	echo "${out} is not a valid directory! Exiting.." && exit 1
@@ -12,8 +16,7 @@ uboot_branch="linux-norebase"
 [[ -z ${DISTRO} ]] && \
 	echo "DISTRO=${DISTRO} not set correctly ! Exiting." && exit 1
 
-mkdir -p "${out}/switchroot/overlays/" \
-	"${out}/switchroot/${DISTRO}" \
+mkdir -p "${out}/switchroot/${DISTRO}" \
 	"${out}/bootloader/ini/"
 
 cp uenv_readme.txt "${out}/switchroot/${DISTRO}"
@@ -51,8 +54,9 @@ make -j2
 mv build/coreboot.rom "${out}/switchroot/${DISTRO}"
 
 echo -e "\n\t\tBuilding U-Boot scripts\n"
-sed -i 's/^setenv ini .*$/setenv ini L4T-'${DISTRO}'\.ini/' linux_boot.txt
-mkimage -V && mkimage -A arm -T script -O linux -d linux_boot.txt "${out}/switchroot/${DISTRO}/boot.scr"
+cd "${cwd}"
+sed -i 's/^setenv ini .*$/setenv ini L4T-'${DISTRO}'\.ini/' ${cwd}/linux_boot.txt
+mkimage -V && mkimage -A arm -T script -O linux -d ${cwd}/linux_boot.txt "${out}/switchroot/${DISTRO}/boot.scr"
 
 echo -e "\n\t\tCreate hekate_ini in bootloader directory\n"
 echo -e "[L4T ${DISTRO}]
@@ -83,4 +87,6 @@ pmc_reboot2payload.reboot_action=bootloader \\
 pmc_reboot2payload.default_payload=reboot_payload.bin \\
 pmc_reboot2payload.hekate_config_id=\${id} \"" > "${out}/bootloader/ini/L4T-${DISTRO}.ini"
 
-echo -e "\n\t\tDone building !\n"
+7z a "${out}/switchroot-${DISTRO}-boot-$(date '+%Y-%m-%d').7z" "${out}/bootloader/" "${out}/switchroot/"
+rm -rf "${out}/bootloader/" "${out}/switchroot/"
+echo -e "\n\t\tDone building ! Output: ${out}/switchroot-${DISTRO}-boot-$(date '+%Y-%m-%d').7z"

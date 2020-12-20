@@ -20,15 +20,15 @@ RUN apt update -y && apt install -y \
 	python \
 	python-dev \
 	bc \
-	ash \
 	curl \
 	gnat-5 \
 	libncurses5-dev \
 	m4 \
 	zlib1g-dev \
+	p7zip-full \
   && rm -rf /var/lib/apt/lists/*
 
-RUN /bin/ash -c 'set -ex && \
+RUN /bin/bash -c 'set -ex && \
     ARCH=`uname -m` && \
     if [ "$ARCH" != "aarch64" ]; then \
 	echo "x86_64" && \
@@ -41,9 +41,6 @@ VOLUME /out
 
 ARG DISTRO
 ENV DISTRO=${DISTRO}
-ENV CROSS_COMPILE=aarch64-linux-gnu-
-ENV ARCH=arm64
-ARG CPUS=2
-ENV CPUS=${CPUS}
 
 COPY . /build
+CMD ./build.sh /out
