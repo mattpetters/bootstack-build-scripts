@@ -3,7 +3,7 @@ stages:
   - build
 
 before_script:
-  - mkdir -p out/
+  - mkdir -p "$CI_PROJECT_DIR/out/"
 
 include:
   - local: .gitlab/templates/build_docker_ci_images.yml
