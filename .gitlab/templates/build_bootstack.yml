@@ -6,4 +6,7 @@
   variables:
     DISTRO: ""
   script:
-    - CPUS=$(nproc) ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- DISTRO=${DISTRO} ./build.sh out/
+    - CPUS=$(nproc) ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- DISTRO=${DISTRO} ./build.sh "$CI_PROJECT_DIR/out/"
+  artifacts:
+    paths:
+      - "$CI_PROJECT_DIR/out/*.7z"
