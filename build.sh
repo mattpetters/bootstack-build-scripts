@@ -56,7 +56,7 @@ mv build/coreboot.rom "${out}/switchroot/${DISTRO}"
 echo -e "\n\t\tBuilding U-Boot scripts\n"
 cd "${cwd}"
 sed -i 's/^setenv ini .*$/setenv ini L4T-'${DISTRO}'\.ini/' ${cwd}/linux_boot.txt
-mkimage -V && mkimage -A arm -T script -O linux -d ${cwd}/linux_boot.txt "${out}/switchroot/${DISTRO}/boot.scr"
+mkimage -V && mkimage -A arm -T script -O linux -d ${cwd}/linux_boot_ext4.txt "${out}/switchroot/${DISTRO}/boot.scr"
 
 echo -e "\n\t\tCreate hekate_ini in bootloader directory\n"
 echo -e "[L4T ${DISTRO}]
@@ -64,6 +64,7 @@ payload=switchroot/${DISTRO}/coreboot.rom
 id=SWR-`echo ${DISTRO:0:3} | tr '[:lower:]' '[:upper:]'`
 icon=switchroot/${DISTRO}/icon_${DISTRO}_hue.bmp
 logopath=switchroot/${DISTRO}/bootlogo_${DISTRO}.bmp
+distro=${DISTRO}
 overlays=
 rootdev=mmcblk0p2
 device=mmc

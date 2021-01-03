@@ -18,11 +18,14 @@ if load mmc 1:1 ${fdtovaddr} bootloader/ini/${ini} && env import -t ${fdtovaddr}
 
         if test -n ${id}; then echo partition number ${id};
         else reset; fi;
+
+	if test -n ${distro}; then echo distro dir ${distro};
+	else reset; fi;
 fi
 
-ext4load ${device} ${root_mmc_index}:${part_num} 0x83000000 /boot/Image
-ext4load ${device} ${root_mmc_index}:${part_num} 0x92000000 /boot/initramfs
-ext4load ${device} ${root_mmc_index}:${part_num} 0x8d000000 /boot/tegra210-icosa.dtb
+load ${device} ${root_mmc_index}:${part_num} 0x83000000 /switchroot/${distro}/Image
+load ${device} ${root_mmc_index}:${part_num} 0x92000000 /switchroot/${distro}/initramfs
+load ${device} ${root_mmc_index}:${part_num} 0x8d000000 /switchroot/${distro}/tegra210-icosa.dtb
 
 fdt addr 0x8d000000 ${filesize}
 
