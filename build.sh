@@ -17,15 +17,30 @@ prepare() {
 	[[ -z ${DISTRO} ]] && \
 		echo "DISTRO=${DISTRO} not set correctly ! Exiting." && exit 1
 
-	mkdir -p "${out}/switchroot/${DISTRO}" \
-		"${out}/bootloader/ini/"
+	mkdir -p "${out}/switchroot/${DISTRO}" "${out}/bootloader/ini/"
+	
+	if [[ ! -d gcc-linaro-7.5.0-2019.12-x86_64_aarch64-linux-gnu ]]; then
+		echo -e "\nSetting up aarch64 cross compiler"
+		wget -q -nc --show-progress https://releases.linaro.org/components/toolchain/binaries/latest-7/aarch64-linux-gnu/gcc-linaro-7.5.0-2019.12-x86_64_aarch64-linux-gnu.tar.xz
+		tar xf gcc-linaro-7.5.0-2019.12-x86_64_aarch64-linux-gnu.tar.xz
+		rm gcc-linaro-7.5.0-2019.12-x86_64_aarch64-linux-gnu.tar.xz
+	fi
+
+	if [[ ! -d gcc-linaro-7.5.0-2019.12-x86_64_arm-linux-gnueabi ]]; then
+		echo -e "\nSetting up arm cross compiler"
+		wget -q -nc --show-progress https://releases.linaro.org/components/toolchain/binaries/latest-7/arm-linux-gnueabi/gcc-linaro-7.5.0-2019.12-x86_64_arm-linux-gnueabi.tar.xz
+		tar xf gcc-linaro-7.5.0-2019.12-x86_64_arm-linux-gnueabi.tar.xz
+		rm gcc-linaro-7.5.0-2019.12-x86_64_arm-linux-gnueabi.tar.xz
+	fi
+
+	PATH="$PATH:$(realpath gcc-linaro-7.5.0-2019.12-x86_64_arm-linux-gnueabi)/bin/:$(realpath gcc-linaro-7.5.0-2019.12-x86_64_aarch64-linux-gnu)/bin/"
 }
 
 uboot() {
 	echo -e "\n\t\tBuilding U-Boot scripts\n"
 	cp uenv_readme.txt "${out}/switchroot/${DISTRO}"
 	cd "${cwd}"
-	sed -i 's/^setenv ini .*$/setenv ini L4T-'${DISTRO}'\.ini/' ${cwd}/linux_boot.txt
+	sed -i 's/^setenv ini .*$/setenv ini L4T-'${DISTRO}'\.ini/' ${cwd}/linux_boot_ext4.txt
 	mkimage -V && mkimage -A arm -T script -O linux -d ${cwd}/linux_boot_ext4.txt "${out}/switchroot/${DISTRO}/boot.scr"
 
 	echo -e "\n\t\tBuilding U-Boot\n"
@@ -44,19 +59,14 @@ uboot() {
 coreboot() {
 	echo -e "\n\t\tBuilding Coreboot\n"
 	if [[ ! -d "${out}/switch-coreboot" ]]; then
-	echo -e "\n\t\tCloning switch-coreboot, branch: ${coreboot_branch}"
-	git clone -b ${coreboot_branch} https://gitlab.com/switchroot/bootstack/switch-coreboot "${out}/switch-coreboot/"
+		echo -e "\n\t\tCloning switch-coreboot, branch: ${coreboot_branch}"
+		git clone -b ${coreboot_branch} https://gitlab.com/switchroot/bootstack/switch-coreboot "${out}/switch-coreboot/"
 	fi
 
 	cd "${out}/switch-coreboot/"
 	git submodule update --init --recursive .
-
-	make crossgcc-arm CPUS=$CPUS
-	make crossgcc-aarch64 CPUS=$CPUS
-
 	make nintendo_switch_defconfig
 	make iasl
-
 	# Important won't build with more threads...
 	make -j2
 
