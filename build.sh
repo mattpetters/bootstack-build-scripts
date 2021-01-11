@@ -16,6 +16,41 @@ prepare() {
 
 	[[ -z ${DISTRO} ]] && \
 		echo "DISTRO=${DISTRO} not set correctly ! Exiting." && exit 1
+	
+	if [[ "$EUID" -ne 0 ]]; then
+		echo "Please run as root"
+		exit
+	fi
+
+	if [[ `which apt` ]]; then
+		apt update -y && apt install -y \
+			u-boot-tools \
+			cpio \
+			gzip \
+			device-tree-compiler \
+			make \
+			git \
+			build-essential \
+			gcc \
+			bison \
+			flex \
+			python3 \
+			python3-distutils \
+			python3-dev \
+			swig \
+			python \
+			python-dev \
+			bc \
+			curl \
+			libncurses5-dev \
+			m4 \
+			zlib1g-dev \
+			p7zip-full \
+			wget \
+			gnat-5
+	else
+		echo -e "\nNot a debian based system. Please make sure you've installed all the dependencies required for building (refer to README)"
+	fi
 
 	mkdir -p "${out}/switchroot/${DISTRO}" "${out}/bootloader/ini/"
 	
