@@ -26,15 +26,8 @@ RUN apt update -y && apt install -y \
 	m4 \
 	zlib1g-dev \
 	p7zip-full \
+	wget \
   && rm -rf /var/lib/apt/lists/*
-
-RUN /bin/bash -c 'set -ex && \
-    ARCH=`uname -m` && \
-    if [ "$ARCH" != "aarch64" ]; then \
-	echo "x86_64" && \
-	apt update -y && \
-	apt install -y gcc-aarch64-linux-gnu; \
-    fi'
 
 WORKDIR /build
 VOLUME /out
