@@ -1,9 +1,9 @@
-setenv ini L4T-bionic.ini
 setenv ovcfgaddr 0x8d100000
 setenv fdtovaddr 0x8d200000
 setenv evtmpaddr 0x8d300000
+setenv distro	 ubuntu
 
-if load mmc 1:1 ${fdtovaddr} bootloader/ini/${ini} && env import -t ${fdtovaddr} ${filesize}; then
+if load mmc 1:1 ${fdtovaddr} switchroot/${distro}/uenv.txt && env import -t ${fdtovaddr} ${filesize}; then
         if test -n ${device}; then echo device type ${device};
         else reset; fi;
 
@@ -12,9 +12,6 @@ if load mmc 1:1 ${fdtovaddr} bootloader/ini/${ini} && env import -t ${fdtovaddr}
 
         if test -n ${id}; then echo partition number ${id};
         else reset; fi;
-
-	if test -n ${distro}; then echo distro dir ${distro};
-	else reset; fi;
 fi
 
 if load ${device} 0:1 0x83000000 /switchroot/${distro}/Image; then setenv mmc_index 0;

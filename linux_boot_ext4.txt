@@ -1,9 +1,13 @@
-setenv ini L4T-bionic.ini
 setenv ovcfgaddr 0x8d100000
 setenv fdtovaddr 0x8d200000
 setenv evtmpaddr 0x8d300000
+setenv distro	 bionic
 
-if load mmc 1:1 ${fdtovaddr} bootloader/ini/${ini} && env import -t ${fdtovaddr} ${filesize}; then
+if load mmc 0:1 ${fdtovaddr} switchroot/${distro}/uenv.txt; then setenv mmc_index 0;
+elif load mmc 1:1 ${fdtovaddr} switchroot/${distro}/uenv.txt; then setenv mmc_index 1;
+else; reset; fi;
+
+if load mmc 1:1 ${fdtovaddr} switchroot/${distro}/uenv.txt && env import -t ${fdtovaddr} ${filesize}; then
         if test -n ${device}; then echo device type ${device};
         else reset; fi;
 
@@ -33,16 +37,10 @@ if test -n ${overlays}; then
             echo overlaying ${ov}...
                 fdt resize 8192
 
-                if load mmc 0:1 ${ovcfgaddr} switchroot/overlays/${ov}.dtbo && fdt apply ${ovcfgaddr}; then
-			setenv mmc_index 0;
+                if load mmc ${mmc_index}:1 ${ovcfgaddr} switchroot/overlays/${ov}.dtbo && fdt apply ${ovcfgaddr}; then
 			echo Successfully loaded ${ov}.dtbo...
-		elif load mmc 1:1 ${ovcfgaddr} switchroot/overlays/${ov}.dtbo && fdt apply ${ovcfgaddr}; then
-			setenv mmc_index 1;
-			echo Successfully loaded ${ov}.dtbo...
-		else
-			reset;
-		fi
-                
+                fi
+
                 # Add additional bootargs for UART-B
                 if test ${ov} = tegra210-UART-B-overlay; then setenv bootargs_extra ${bootargs_extra} ${uartb}; echo Enabled UART-B logging; fi
 
