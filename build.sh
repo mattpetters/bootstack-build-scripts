@@ -73,8 +73,8 @@ prepare() {
 
 uboot() {
 	echo -e "\n\t\tBuilding U-Boot scripts\n"
-	cp uenv_readme.txt "${out}/switchroot/${DISTRO}"
 	cd "${cwd}"
+	cp "${cwd}/uenv_readme.txt" "${out}/switchroot/${DISTRO}"
 	sed -i 's/^setenv ini .*$/setenv ini L4T-'${DISTRO}'\.ini/' ${cwd}/linux_boot_ext4.txt
 	mkimage -V && mkimage -A arm -T script -O linux -d ${cwd}/linux_boot_ext4.txt "${out}/switchroot/${DISTRO}/boot.scr"
 
