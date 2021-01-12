@@ -131,11 +131,24 @@ uenv() {
 	pmc_reboot2payload.reboot_action=bootloader \\
 	pmc_reboot2payload.default_payload=reboot_payload.bin \\
 	pmc_reboot2payload.hekate_config_id=\${id} \"" > "${out}/switchroot/${DISTRO}/uenv.txt"
+}
 
+misc() {
+	echo -e "\nCreating ini file"
 	echo -e "[L4T ${DISTRO}]
 	id=SWR-`echo ${DISTRO:0:3} | tr '[:lower:]' '[:upper:]'`
-	icon=switchroot/${DISTRO}/icon_${DISTRO}_hue.bmp
+	icon=bootloader/res/icon_${DISTRO}_hue.bmp
 	logopath=switchroot/${DISTRO}/bootlogo_${DISTRO}.bmp" > "${out}/bootloader/ini/L4T-${DISTRO}.ini"
+
+	echo -e "\nAddding switchroot icons"
+	if [[ -e ${cwd}/Hekate-Icons/${DISTRO} ]]; then
+		cp "${cwd}/Hekate-Icons/${DISTRO}/bootlogo_${DISTRO}.bmp" "${out}/switchroot/${DISTRO}/bootlogo_${DISTRO}.bmp"
+		cp "${cwd}/Hekate-Icons/${DISTRO}/bootlogo_${DISTRO}_hue.bmp" "${out}/bootloader/res/bootlogo_${DISTRO}_hue.bmp"
+	else
+		cp "${cwd}/Hekate-Icons/linux/bootlogo_linux.bmp" "${out}/switchroot/${DISTRO}/bootlogo_${DISTRO}.bmp"
+		cp "${cwd}/Hekate-Icons/linux/bootlogo_linux_hue.bmp" "${out}/bootloader/res/bootlogo_${DISTRO}_hue.bmp"
+	fi
+
 }
 
 compress() {
@@ -147,6 +160,7 @@ prepare
 uboot
 coreboot
 uenv
+misc
 if [[ -z ${NO_COMPRESS} ]]; then
 	compress
 fi
