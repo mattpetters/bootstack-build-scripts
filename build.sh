@@ -74,7 +74,7 @@ prepare() {
 uboot() {
 	echo -e "\n\t\tBuilding U-Boot scripts\n"
 	cp "${cwd}/uenv_readme.txt" "${out}/switchroot/${DISTRO}"
-	sed -i 's/^setenv distro .*$/setenv distro '${DISTRO}'/' "${cwd}/linux_boot_ext4.txt"
+	sed -i 's/^setenv distro.*$/setenv distro '${DISTRO}'/g' "${cwd}/linux_boot_ext4.txt"
 	mkimage -V && mkimage -A arm -T script -O linux -d "${cwd}/linux_boot_ext4.txt" "${out}/switchroot/${DISTRO}/boot.scr"
 
 	echo -e "\n\t\tBuilding U-Boot\n"
@@ -110,39 +110,39 @@ coreboot() {
 uenv() {
 	echo -e "\n\t\tCreate uenv.txt"
 	echo -e "distro=${DISTRO}
-	overlays=
-	rootdev=mmcblk0p2
-	part_num=2
-	device=mmc
-	runlevel=2
-	rootlabel_retries=1
-	skip_extract=0
-	hdmi_fbconsole=1
-	usblogging=console=ttyGS0,115200,8n1
-	uartb=no_console_suspend console=ttyS1,115200,8n1 earlycon=tegra_comb_uart,mmio32,0x70006040
-	kernelcmd_run=setenv bootargs \${bootargs_extra} \"root=/dev/\${rootdev} rootfstype=ext4 rw access=m2 \\
-	firmware_class.path=/lib/firmware/ \\
-	rootlabel_retries=\${rootlabel_retries} \\
-	skip_extract=\${skip_extract} \\
-	fbcon=primary:\${hdmi_fbconsole} fbcon=rotate:3 \\
-	consoleblank=0 zswap.zpool=smalloc \\
-	tegra_fbmem=0x0@0x1 vpr_resize \\
-	nvdec_enabled=0 pmc_reboot2payload.enabled=1 \\
-	pmc_reboot2payload.reboot_action=bootloader \\
-	pmc_reboot2payload.default_payload=reboot_payload.bin \\
-	pmc_reboot2payload.hekate_config_id=\${id} \"" > "${out}/switchroot/${DISTRO}/uenv.txt"
+overlays=
+rootdev=mmcblk0p2
+part_num=2
+device=mmc
+runlevel=2
+rootlabel_retries=1
+skip_extract=0
+hdmi_fbconsole=1
+usblogging=console=ttyGS0,115200,8n1
+uartb=no_console_suspend console=ttyS1,115200,8n1 earlycon=tegra_comb_uart,mmio32,0x70006040
+kernelcmd_run=setenv bootargs \${bootargs_extra} \"root=/dev/\${rootdev} rootfstype=ext4 rw access=m2 \\
+firmware_class.path=/lib/firmware/ \\
+rootlabel_retries=\${rootlabel_retries} \\
+skip_extract=\${skip_extract} \\
+fbcon=primary:\${hdmi_fbconsole} fbcon=rotate:3 \\
+consoleblank=0 zswap.zpool=smalloc \\
+tegra_fbmem=0x0@0x1 vpr_resize \\
+nvdec_enabled=0 pmc_reboot2payload.enabled=1 \\
+pmc_reboot2payload.reboot_action=bootloader \\
+pmc_reboot2payload.default_payload=reboot_payload.bin \\
+pmc_reboot2payload.hekate_config_id=\${id} \"" > "${out}/switchroot/${DISTRO}/uenv.txt"
 }
 
 misc() {
 	echo -e "\nCreating ini file"
 	echo -e "[L4T ${DISTRO}]
-	payload=switchroot/${DISTRO}/coreboot.rom
-	id=SWR-`echo ${DISTRO:0:3} | tr '[:lower:]' '[:upper:]'`
-	icon=bootloader/res/icon_${DISTRO}_hue.bmp
-	logopath=switchroot/${DISTRO}/bootlogo_${DISTRO}.bmp" > "${out}/bootloader/ini/L4T-${DISTRO}.ini"
+payload=switchroot/${DISTRO}/coreboot.rom
+id=SWR-`echo ${DISTRO:0:3} | tr '[:lower:]' '[:upper:]'`
+icon=bootloader/res/icon_${DISTRO}_hue.bmp
+logopath=switchroot/${DISTRO}/bootlogo_${DISTRO}.bmp" > "${out}/bootloader/ini/L4T-${DISTRO}.ini"
 
 	echo -e "\nAddding switchroot icons"
-	if [[ -e ${cwd}/Hekate-Icons/${DISTRO} ]]; then
+	if [[ -d "${cwd}/Hekate-Icons/${DISTRO}" ]]; then
 		cp "${cwd}/Hekate-Icons/${DISTRO}/bootlogo_${DISTRO}.bmp" "${out}/switchroot/${DISTRO}/bootlogo_${DISTRO}.bmp"
 		cp "${cwd}/Hekate-Icons/${DISTRO}/bootlogo_${DISTRO}_hue.bmp" "${out}/bootloader/res/bootlogo_${DISTRO}_hue.bmp"
 	else
