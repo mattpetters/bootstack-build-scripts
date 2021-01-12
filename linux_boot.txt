@@ -7,6 +7,8 @@ if load mmc 1:1 ${fdtovaddr} switchroot/${distro}/uenv.txt && env import -t ${fd
         if test -n ${device}; then echo device type ${device};
         else reset; fi;
 
+	if ${device} = usb; then usb start; fi;
+
         if test -n ${rootdev}; then echo partition number ${rootdev};
         else reset; fi;
 
