@@ -148,7 +148,6 @@ misc() {
 		cp "${cwd}/Hekate-Icons/linux/bootlogo_linux.bmp" "${out}/switchroot/${DISTRO}/bootlogo_${DISTRO}.bmp"
 		cp "${cwd}/Hekate-Icons/linux/bootlogo_linux_hue.bmp" "${out}/bootloader/res/bootlogo_${DISTRO}_hue.bmp"
 	fi
-
 }
 
 compress() {
