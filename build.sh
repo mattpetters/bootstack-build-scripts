@@ -136,6 +136,7 @@ uenv() {
 misc() {
 	echo -e "\nCreating ini file"
 	echo -e "[L4T ${DISTRO}]
+	payload=switchroot/${DISTRO}/coreboot.rom
 	id=SWR-`echo ${DISTRO:0:3} | tr '[:lower:]' '[:upper:]'`
 	icon=bootloader/res/icon_${DISTRO}_hue.bmp
 	logopath=switchroot/${DISTRO}/bootlogo_${DISTRO}.bmp" > "${out}/bootloader/ini/L4T-${DISTRO}.ini"
