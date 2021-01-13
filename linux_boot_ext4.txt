@@ -5,13 +5,13 @@ setenv distro	 bionic
 
 if load mmc 0:1 ${fdtovaddr} switchroot/${distro}/uenv.txt; then setenv mmc_index 0;
 elif load mmc 1:1 ${fdtovaddr} switchroot/${distro}/uenv.txt; then setenv mmc_index 1;
-else; reset; fi;
+else reset; fi;
 
-if load mmc 1:1 ${fdtovaddr} switchroot/${distro}/uenv.txt && env import -t ${fdtovaddr} ${filesize}; then
+if env import -t ${fdtovaddr} ${filesize}; then
         if test -n ${device}; then echo device type ${device};
         else reset; fi;
 
-	if ${device} = usb; then usb start; fi;
+	if test ${device} = usb; then usb start; fi;
 
         if test -n ${rootdev}; then echo rootdev is ${rootdev};
         else reset; fi;

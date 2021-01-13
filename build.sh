@@ -110,6 +110,7 @@ coreboot() {
 uenv() {
 	echo -e "\n\t\tCreate uenv.txt"
 	echo -e "distro=${DISTRO}
+id=SWR-ARC
 overlays=
 rootdev=mmcblk0p2
 part_num=2

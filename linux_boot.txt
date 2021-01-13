@@ -3,11 +3,15 @@ setenv fdtovaddr 0x8d200000
 setenv evtmpaddr 0x8d300000
 setenv distro	 ubuntu
 
-if load mmc 1:1 ${fdtovaddr} switchroot/${distro}/uenv.txt && env import -t ${fdtovaddr} ${filesize}; then
+if load mmc 0:1 ${fdtovaddr} switchroot/${distro}/uenv.txt; then setenv mmc_index 0;
+elif load mmc 1:1 ${fdtovaddr} switchroot/${distro}/uenv.txt; then setenv mmc_index 1;
+else reset; fi;
+
+if env import -t ${fdtovaddr} ${filesize}; then
         if test -n ${device}; then echo device type ${device};
         else reset; fi;
 
-	if ${device} = usb; then usb start; fi;
+	if test ${device} = usb; then usb start; fi;
 
         if test -n ${rootdev}; then echo partition number ${rootdev};
         else reset; fi;
@@ -16,12 +20,12 @@ if load mmc 1:1 ${fdtovaddr} switchroot/${distro}/uenv.txt && env import -t ${fd
         else reset; fi;
 fi
 
-if load ${device} 0:1 0x83000000 /switchroot/${distro}/Image; then setenv mmc_index 0;
-elif load ${device} 1:1 0x83000000 /switchroot/${distro}/Image; then setenv mmc_index 1;
+if load ${device} 0:1 0x83000000 switchroot/${distro}/Image; then setenv mmc_index 0;
+elif load ${device} 1:1 0x83000000 switchroot/${distro}/Image; then setenv mmc_index 1;
 else reset; fi;
 
-load ${device} ${mmc_index}:1 0x92000000 /switchroot/${distro}/initramfs
-load ${device} ${mmc_index}:1 0x8d000000 /switchroot/${distro}/tegra210-icosa.dtb
+load ${device} ${mmc_index}:1 0x92000000 switchroot/${distro}/initramfs
+load ${device} ${mmc_index}:1 0x8d000000 switchroot/${distro}/tegra210-icosa.dtb
 
 fdt addr 0x8d000000 ${filesize}
 
@@ -32,15 +36,9 @@ if test -n ${overlays}; then
             echo overlaying ${ov}...
                 fdt resize 8192
 
-                if load mmc 0:1 ${ovcfgaddr} switchroot/overlays/${ov}.dtbo && fdt apply ${ovcfgaddr}; then
-			setenv mmc_index 0;
+                if load mmc ${mmc_index}:1 ${ovcfgaddr} switchroot/overlays/${ov}.dtbo && fdt apply ${ovcfgaddr}; then
 			echo Successfully loaded ${ov}.dtbo...
-		elif load mmc 1:1 ${ovcfgaddr} switchroot/overlays/${ov}.dtbo && fdt apply ${ovcfgaddr}; then
-			setenv mmc_index 1;
-			echo Successfully loaded ${ov}.dtbo...
-		else
-			reset;
-		fi
+                fi
 
                 # Add additional bootargs for Serial USB
                 if test ${ov} = usb_logging; then setenv bootargs_extra ${usblogging} ${bootargs_extra}; echo Enabled usb serial logging; fi
