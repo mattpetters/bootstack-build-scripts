@@ -1,37 +1,44 @@
 setenv ovcfgaddr 0x8d100000
 setenv fdtovaddr 0x8d200000
 setenv evtmpaddr 0x8d300000
-setenv distro	 ubuntu
+setenv distro arch
 
 if load mmc 0:1 ${fdtovaddr} switchroot/${distro}/uenv.txt; then setenv mmc_index 0;
 elif load mmc 1:1 ${fdtovaddr} switchroot/${distro}/uenv.txt; then setenv mmc_index 1;
 else reset; fi;
 
 if env import -t ${fdtovaddr} ${filesize}; then
-        if test -n ${device}; then echo device type ${device};
-        else reset; fi;
+        if test -n ${rootdev}; then echo rootdev is ${rootdev};
+        else echo Rootdev missing; reset; fi
 
-	if test ${device} = usb; then usb start; fi;
+        if test -n ${id}; then echo hekate id is ${id};
+        else echo Rootlabel ID missing; reset; fi
 
-        if test -n ${rootdev}; then echo partition number ${rootdev};
-        else reset; fi;
+	if test -n ${device}; then echo Device type is ${device};
+	else setenv device mmc; echo Assume device type as ${device}; fi
 
-        if test -n ${id}; then echo partition number ${id};
-        else reset; fi;
+	setexpr part_num gsub ".*(\\d)" "\\1" ${rootdev}
 fi
 
-if load ${device} 0:1 0x83000000 switchroot/${distro}/Image; then setenv mmc_index 0;
-elif load ${device} 1:1 0x83000000 switchroot/${distro}/Image; then setenv mmc_index 1;
-else reset; fi;
+if test ${device} = usb; then echo Starting usb stack; usb start; fi;
 
-load ${device} ${mmc_index}:1 0x92000000 switchroot/${distro}/initramfs
-load ${device} ${mmc_index}:1 0x8d000000 switchroot/${distro}/tegra210-icosa.dtb
+if load mmc ${mmc_index}:1 0x83000000 switchroot/${distro}/Image; then
+	load mmc ${mmc_index}:1 0x92000000 switchroot/${distro}/initramfs
+	load mmc ${mmc_index}:1 0x8d000000 switchroot/${distro}/tegra210-icosa.dtb
+else
+	if load ${device} 0:${part_num} 0x83000000 /boot/Image; then setenv root_mmc_index 0;
+	elif load ${device} 1:${part_num} 0x83000000 /boot/Image; then setenv root_mmc_index 1;
+	else reset; fi;
+
+	load ${device} ${root_mmc_index}:${part_num} 0x92000000 /boot/initramfs
+	load ${device} ${root_mmc_index}:${part_num} 0x8d000000 /boot/tegra210-icosa.dtb
+fi
 
 fdt addr 0x8d000000 ${filesize}
 
 # patch dtb with overlays if they exist
 if test -n ${overlays}; then
-        echo loaded overlays.txt: ${overlays}
+        echo loaded overlay: ${overlays}
         for ov in ${overlays}; do
             echo overlaying ${ov}...
                 fdt resize 8192
@@ -39,6 +46,9 @@ if test -n ${overlays}; then
                 if load mmc ${mmc_index}:1 ${ovcfgaddr} switchroot/overlays/${ov}.dtbo && fdt apply ${ovcfgaddr}; then
 			echo Successfully loaded ${ov}.dtbo...
                 fi
+
+                # Add additional bootargs for UART-B
+                if test ${ov} = tegra210-UART-B-overlay; then setenv bootargs_extra ${bootargs_extra} ${uartb}; echo Enabled UART-B logging; fi
 
                 # Add additional bootargs for Serial USB
                 if test ${ov} = usb_logging; then setenv bootargs_extra ${usblogging} ${bootargs_extra}; echo Enabled usb serial logging; fi

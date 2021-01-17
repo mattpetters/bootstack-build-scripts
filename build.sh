@@ -23,6 +23,11 @@ prepare() {
 	fi
 
 	if [[ `which apt` ]]; then
+		if [[ "$EUID" -ne 0 ]]; then
+			echo "Please run as root"
+			exit
+		fi
+
 		apt update -y && apt install -y \
 			u-boot-tools \
 			cpio \
@@ -71,12 +76,14 @@ prepare() {
 	PATH="$PATH:$(realpath gcc-linaro-7.5.0-2019.12-x86_64_arm-linux-gnueabi)/bin/:$(realpath gcc-linaro-7.5.0-2019.12-x86_64_aarch64-linux-gnu)/bin/"
 }
 
-uboot() {
+uboot_scr() {
 	echo -e "\n\t\tBuilding U-Boot scripts\n"
 	cp "${cwd}/uenv_readme.txt" "${out}/switchroot/${DISTRO}"
-	sed -i 's/^setenv distro.*$/setenv distro '${DISTRO}'/g' "${cwd}/linux_boot_ext4.txt"
-	mkimage -V && mkimage -A arm -T script -O linux -d "${cwd}/linux_boot_ext4.txt" "${out}/switchroot/${DISTRO}/boot.scr"
+	sed -i 's/^setenv distro.*$/setenv distro '${DISTRO}'/g' "${cwd}/linux_boot.txt"
+	mkimage -V && mkimage -A arm -T script -O linux -d "${cwd}/linux_boot.txt" "${out}/switchroot/${DISTRO}/boot.scr"
+}
 
+uboot() {
 	echo -e "\n\t\tBuilding U-Boot\n"
 	if [[ ! -d "${out}/switch-uboot" ]]; then
 		echo -e "\n\t\tCloning switch-uboot, branch: ${uboot_branch}"
@@ -110,10 +117,9 @@ coreboot() {
 uenv() {
 	echo -e "\n\t\tCreate uenv.txt"
 	echo -e "distro=${DISTRO}
-id=SWR-ARC
+id=SWR-`echo ${DISTRO:0:3} | tr '[:lower:]' '[:upper:]'`
 overlays=
 rootdev=mmcblk0p2
-part_num=2
 device=mmc
 runlevel=2
 rootlabel_retries=1
@@ -121,7 +127,7 @@ skip_extract=0
 hdmi_fbconsole=1
 usblogging=console=ttyGS0,115200,8n1
 uartb=no_console_suspend console=ttyS1,115200,8n1 earlycon=tegra_comb_uart,mmio32,0x70006040
-kernelcmd_run=setenv bootargs \${bootargs_extra} \"root=/dev/\${rootdev} rootfstype=ext4 rw access=m2 \\
+kernelcmd_run=setenv bootargs \${bootargs_extra} \"root=/dev/\${rootdev}\${part_num} rootfstype=ext4 rw access=m2 \\
 firmware_class.path=/lib/firmware/ \\
 rootlabel_retries=\${rootlabel_retries} \\
 skip_extract=\${skip_extract} \\
@@ -143,12 +149,13 @@ icon=bootloader/res/icon_${DISTRO}_hue.bmp
 logopath=switchroot/${DISTRO}/bootlogo_${DISTRO}.bmp" > "${out}/bootloader/ini/L4T-${DISTRO}.ini"
 
 	echo -e "\nAddding switchroot icons"
+	mkdir -p "${out}/bootloader/res/"
 	if [[ -d "${cwd}/Hekate-Icons/${DISTRO}" ]]; then
-		cp "${cwd}/Hekate-Icons/${DISTRO}/bootlogo_${DISTRO}.bmp" "${out}/switchroot/${DISTRO}/bootlogo_${DISTRO}.bmp"
-		cp "${cwd}/Hekate-Icons/${DISTRO}/bootlogo_${DISTRO}_hue.bmp" "${out}/bootloader/res/bootlogo_${DISTRO}_hue.bmp"
+		cp "${cwd}/Hekate-Icons/${DISTRO}/icon_${DISTRO}.bmp" "${out}/switchroot/${DISTRO}/bootlogo_${DISTRO}.bmp"
+		cp "${cwd}/Hekate-Icons/${DISTRO}/icon_${DISTRO}_hue.bmp" "${out}/bootloader/res/icon_${DISTRO}_hue.bmp"
 	else
-		cp "${cwd}/Hekate-Icons/linux/bootlogo_linux.bmp" "${out}/switchroot/${DISTRO}/bootlogo_${DISTRO}.bmp"
-		cp "${cwd}/Hekate-Icons/linux/bootlogo_linux_hue.bmp" "${out}/bootloader/res/bootlogo_${DISTRO}_hue.bmp"
+		cp "${cwd}/Hekate-Icons/linux/icon_linux.bmp" "${out}/switchroot/${DISTRO}/bootlogo_${DISTRO}.bmp"
+		cp "${cwd}/Hekate-Icons/linux/icon_linux_hue.bmp" "${out}/bootloader/res/icon_${DISTRO}_hue.bmp"
 	fi
 }
 
@@ -157,7 +164,77 @@ compress() {
 	rm -rf "${out}/bootloader/" "${out}/switchroot/"
 }
 
+showHelp() {
+cat << EOF  
+Usage: ./build <output_directory>
+Create a distribution from configuration set in JSON
+
+-h, --help                  	Display help
+-c, --chroot			Chroot into given directory, register QEMU binaries if needed
+-v, --verbose               	Run script in verbose mode. Will print out each step of execution.
+EOF
+}
+
+SCRIPT_OPTS='hcd:v'
+typeset -A ARRAY_OPTS
+ARRAY_OPTS=(
+	[help]=h
+	[coreboot]=c
+	[distro]=d
+	[verbose]=v
+)
+
+while getopts ${SCRIPT_OPTS} OPTION ; do
+	if [[ "x$OPTION" == "x-" ]]; then
+		LONG_OPTION=$OPTARG
+		LONG_OPTARG=$(echo $LONG_OPTION | grep "=" | cut -d'=' -f2)
+		LONG_OPTIND=-1
+		[[ "x$LONG_OPTARG" = "x" ]] && LONG_OPTIND=$OPTIND || LONG_OPTION=$(echo $OPTARG | cut -d'=' -f1)
+		[[ $LONG_OPTIND -ne -1 ]] && eval LONG_OPTARG="\$$LONG_OPTIND"
+		OPTION=${ARRAY_OPTS[$LONG_OPTION]}
+		[[ "x$OPTION" = "x" ]] &&  OPTION="?" OPTARG="-$LONG_OPTION"
+
+		if [[ $( echo "${SCRIPT_OPTS}" | grep -c "${OPTION}:" ) -eq 1 ]]; then
+		    if [[ "x${LONG_OPTARG}" = "x" ]] || [[ "${LONG_OPTARG}" = -* ]]; then 
+			OPTION=":" OPTARG="-$LONG_OPTION"
+		    else
+			OPTARG="$LONG_OPTARG";
+			if [[ $LONG_OPTIND -ne -1 ]]; then
+			    [[ $OPTIND -le $Optnum ]] && OPTIND=$(( $OPTIND+1 ))
+			    shift $OPTIND
+			    OPTIND=1
+			fi
+		    fi
+		fi
+	fi
+
+	if [[ "x${OPTION}" != "x:" ]] && [[ "x${OPTION}" != "x?" ]] && [[ "${OPTARG}" = -* ]]; then 
+		OPTARG="$OPTION" OPTION=":"
+	fi
+	
+	case "$OPTION" in
+		h) 
+			showHelp
+			exit 0
+			;;
+		c)
+			prepare
+			uboot
+			coreboot
+			exit 0
+			;;
+		d)
+			export DISTRO="${OPTARG}"
+			;;
+		v)
+			set -xv  # Set xtrace and verbose mode.
+			;;
+	esac
+done
+shift $((OPTIND-1))
+
 prepare
+uboot_scr
 uboot
 coreboot
 uenv
