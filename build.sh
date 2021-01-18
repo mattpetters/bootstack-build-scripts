@@ -126,7 +126,7 @@ skip_extract=0
 hdmi_fbconsole=1
 usblogging=console=ttyGS0,115200,8n1
 uartb=no_console_suspend console=ttyS1,115200,8n1 earlycon=tegra_comb_uart,mmio32,0x70006040
-kernelcmd_run=setenv bootargs \${bootargs_extra} \"root=/dev/\${rootdev}\${part_num} rootfstype=ext4 rw access=m2 \\
+kernelcmd_run=setenv bootargs \${bootargs_extra} \"root=/dev/\${rootdev} rootfstype=ext4 rw access=m2 \\
 firmware_class.path=/lib/firmware/ \\
 rootlabel_retries=\${rootlabel_retries} \\
 skip_extract=\${skip_extract} \\
