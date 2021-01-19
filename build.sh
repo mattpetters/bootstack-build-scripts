@@ -59,21 +59,21 @@ prepare() {
 
 	mkdir -p "${out}/switchroot/${DISTRO}" "${out}/bootloader/ini/"
 	
-	if [[ ! -d gcc-linaro-7.5.0-2019.12-x86_64_aarch64-linux-gnu ]]; then
+	if [[ ! -d "${out}/gcc-linaro-7.5.0-2019.12-x86_64_aarch64-linux-gnu" ]]; then
 		echo -e "\nSetting up aarch64 cross compiler"
 		wget -q -nc --show-progress https://releases.linaro.org/components/toolchain/binaries/latest-7/aarch64-linux-gnu/gcc-linaro-7.5.0-2019.12-x86_64_aarch64-linux-gnu.tar.xz
-		tar xf gcc-linaro-7.5.0-2019.12-x86_64_aarch64-linux-gnu.tar.xz
+		tar xf gcc-linaro-7.5.0-2019.12-x86_64_aarch64-linux-gnu.tar.xz -C "${out}"
 		rm gcc-linaro-7.5.0-2019.12-x86_64_aarch64-linux-gnu.tar.xz
 	fi
 
-	if [[ ! -d gcc-linaro-7.5.0-2019.12-x86_64_arm-linux-gnueabi ]]; then
+	if [[ ! -d "${out}/gcc-linaro-7.5.0-2019.12-x86_64_arm-linux-gnueabi" ]]; then
 		echo -e "\nSetting up arm cross compiler"
 		wget -q -nc --show-progress https://releases.linaro.org/components/toolchain/binaries/latest-7/arm-linux-gnueabi/gcc-linaro-7.5.0-2019.12-x86_64_arm-linux-gnueabi.tar.xz
-		tar xf gcc-linaro-7.5.0-2019.12-x86_64_arm-linux-gnueabi.tar.xz
+		tar xf gcc-linaro-7.5.0-2019.12-x86_64_arm-linux-gnueabi.tar.xz -C "${out}"
 		rm gcc-linaro-7.5.0-2019.12-x86_64_arm-linux-gnueabi.tar.xz
 	fi
 
-	PATH="$PATH:$(realpath gcc-linaro-7.5.0-2019.12-x86_64_arm-linux-gnueabi)/bin/:$(realpath gcc-linaro-7.5.0-2019.12-x86_64_aarch64-linux-gnu)/bin/"
+	PATH="$PATH:$(realpath ${out}/gcc-linaro-7.5.0-2019.12-x86_64_arm-linux-gnueabi)/bin/:$(realpath ${out}/gcc-linaro-7.5.0-2019.12-x86_64_aarch64-linux-gnu)/bin/"
 }
 
 uboot_scr() {
