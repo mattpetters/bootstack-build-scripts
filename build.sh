@@ -4,8 +4,7 @@ set -e
 # Use last argument as output directory
 cwd="$(realpath "$(dirname "${BASH_SOURCE[0]}")")"
 out="${out:-$(realpath "${@:$#}")}"
-coreboot_branch="switch"
-uboot_branch="linux-norebase"
+UBOOT="linux-norebase"
 export ARCH=${ARCH:-"arm64"}
 export CROSS_COMPILE=${CROSS_COMPILE:-"aarch64-linux-gnu-"}
 export CPUS=${CPUS:-$(($(nproc) - 1))}
@@ -17,17 +16,11 @@ prepare() {
 	[[ -z ${DISTRO} ]] && \
 		echo "DISTRO=${DISTRO} not set correctly ! Exiting." && exit 1
 	
-	if [[ "$EUID" -ne 0 ]]; then
-		echo "Please run as root"
-		exit
-	fi
-
 	if [[ `which apt` ]]; then
 		if [[ "$EUID" -ne 0 ]]; then
 			echo "Please run as root"
 			exit
 		fi
-
 		apt update -y && apt install -y \
 			u-boot-tools \
 			cpio \
@@ -73,7 +66,7 @@ prepare() {
 		rm gcc-linaro-7.5.0-2019.12-x86_64_arm-linux-gnueabi.tar.xz
 	fi
 
-	PATH="$PATH:$(realpath ${out}/gcc-linaro-7.5.0-2019.12-x86_64_arm-linux-gnueabi)/bin/:$(realpath ${out}/gcc-linaro-7.5.0-2019.12-x86_64_aarch64-linux-gnu)/bin/"
+	PATH="$(realpath ${out}/gcc-linaro-7.5.0-2019.12-x86_64_arm-linux-gnueabi)/bin/:$(realpath ${out}/gcc-linaro-7.5.0-2019.12-x86_64_aarch64-linux-gnu)/bin/:$PATH"
 }
 
 uboot_scr() {
@@ -85,9 +78,11 @@ uboot_scr() {
 
 uboot() {
 	echo -e "\n\t\tBuilding U-Boot\n"
+	[[ "${DISTRO}" == "android" ]] && UBOOT="${DISTRO}"
+
 	if [[ ! -d "${out}/switch-uboot" ]]; then
-		echo -e "\n\t\tCloning switch-uboot, branch: ${uboot_branch}"
-		git clone -b ${uboot_branch} https://gitlab.com/switchroot/bootstack/switch-uboot "${out}/switch-uboot/"
+		echo -e "\n\t\tCloning switch-uboot, branch: ${UBOOT}"
+		git clone -b ${UBOOT} https://gitlab.com/switchroot/bootstack/switch-uboot "${out}/switch-uboot/"
 	fi
 
 	cd "${out}/switch-uboot"
@@ -100,12 +95,15 @@ uboot() {
 coreboot() {
 	echo -e "\n\t\tBuilding Coreboot\n"
 	if [[ ! -d "${out}/switch-coreboot" ]]; then
-		echo -e "\n\t\tCloning switch-coreboot, branch: ${coreboot_branch}"
-		git clone -b ${coreboot_branch} https://gitlab.com/switchroot/bootstack/switch-coreboot "${out}/switch-coreboot/"
+		echo -e "\n\t\tCloning switch-coreboot"
+		git clone https://gitlab.com/switchroot/bootstack/switch-coreboot "${out}/switch-coreboot/"
 	fi
 
 	cd "${out}/switch-coreboot/"
 	git submodule update --init --recursive .
+	if [[ -n "${PATCH}" ]]; then
+		git apply "${cwd}/patch/coreboot_emc_oc.patch"
+	fi
 	make nintendo_switch_defconfig
 	make iasl
 	# Important won't build with more threads...
@@ -169,17 +167,22 @@ Usage: ./build <output_directory>
 Create a distribution from configuration set in JSON
 
 -h, --help                  	Display help
--c, --chroot			Chroot into given directory, register QEMU binaries if needed
+-c, --coreboot			Build coreboot only
+-d, --distro			Set distribution name
+-n, --nocomp			Build without compressing files
+-p, --patch			Apply coreboot RAM overclock patch
 -v, --verbose               	Run script in verbose mode. Will print out each step of execution.
 EOF
 }
 
-SCRIPT_OPTS='hcd:v'
+SCRIPT_OPTS='hcd:npv'
 typeset -A ARRAY_OPTS
 ARRAY_OPTS=(
 	[help]=h
 	[coreboot]=c
 	[distro]=d
+	[nocomp]=n
+	[patch]=p
 	[verbose]=v
 )
 
@@ -217,13 +220,16 @@ while getopts ${SCRIPT_OPTS} OPTION ; do
 			exit 0
 			;;
 		c)
-			prepare
-			uboot
-			coreboot
-			exit 0
+			export COREBOOT=true
 			;;
 		d)
 			export DISTRO="${OPTARG}"
+			;;
+		n)
+			export NO_COMPRESS=true
+			;;
+		p)
+			export PATCH=true
 			;;
 		v)
 			set -xv  # Set xtrace and verbose mode.
@@ -233,9 +239,15 @@ done
 shift $((OPTIND-1))
 
 prepare
-uboot_scr
 uboot
 coreboot
+if [[ -n "${COREBOOT}" ]]; then
+	mv "${out}/switchroot/${DISTRO}/coreboot.rom" "${out}"
+	rm -rf "${out}/switchroot/" "${out}/bootloader/"
+	echo -e "\nBuilding coreboot only finished !"
+	exit 0
+fi
+uboot_scr
 uenv
 misc
 if [[ -z ${NO_COMPRESS} ]]; then

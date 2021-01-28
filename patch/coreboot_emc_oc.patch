@@ -1,0 +1,13 @@
+diff --git a/src/soc/nvidia/tegra210/mtc.c b/src/soc/nvidia/tegra210/mtc.c
+index 8fecba4eea..25e5b432be 100644
+--- a/src/soc/nvidia/tegra210/mtc.c
++++ b/src/soc/nvidia/tegra210/mtc.c
+@@ -69,7 +69,7 @@ int tegra210_run_mtc(void)
+ 	}
+ 
+ 	mtc_cfg.mtc_table = (emc_table_t *)cbmem_tab;
+-
++	mtc_cfg.mtc_table[9].rate_khz = 1862400;
+ 	int boot_index = 0;
+ 	u32 reg = read32(CLK_RST_REG(clk_src_emc));
+ 	printk(BIOS_INFO, "MTC: clk_src_emc=0x%08x\n", reg);
