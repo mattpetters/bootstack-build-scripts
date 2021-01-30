@@ -83,10 +83,13 @@ uboot() {
 	if [[ ! -d "${out}/switch-uboot" ]]; then
 		echo -e "\n\t\tCloning switch-uboot, branch: ${UBOOT}"
 		git clone -b ${UBOOT} https://gitlab.com/switchroot/bootstack/switch-uboot "${out}/switch-uboot/"
+	else
+		cd "${out}/switch-uboot"
+		# Force uboot branch checkout if differing from currently set
+		[[ `git branch --show-current` != ${UBOOT} ]] && git checkout -f ${UBOOT}
+		git submodule update --init --recursive .
 	fi
 
-	cd "${out}/switch-uboot"
-	git submodule update --init --recursive .
 	sed -i 's/boot_prefixes=\/ \/switchroot\/.*\/\\0/boot_prefixes=\/ \/switchroot\/'${DISTRO}'\/\\0/' "${out}/switch-uboot/include/config_distro_bootcmd.h"
 	make nintendo-switch_defconfig
 	make -j"${CPUS}"
@@ -97,13 +100,17 @@ coreboot() {
 	if [[ ! -d "${out}/switch-coreboot" ]]; then
 		echo -e "\n\t\tCloning switch-coreboot"
 		git clone https://gitlab.com/switchroot/bootstack/switch-coreboot "${out}/switch-coreboot/"
+	else
+		cd "${out}/switch-coreboot/"
+		git reset --hard HEAD
+		git pull
+		git submodule update --init --recursive .
 	fi
 
-	cd "${out}/switch-coreboot/"
-	git submodule update --init --recursive .
 	if [[ -n "${PATCH}" ]]; then
 		git apply "${cwd}/patch/coreboot_emc_oc.patch"
 	fi
+
 	make nintendo_switch_defconfig
 	make iasl
 	# Important won't build with more threads...
@@ -145,6 +152,7 @@ icon=bootloader/res/icon_${DISTRO}_hue.bmp
 logopath=switchroot/${DISTRO}/bootlogo_${DISTRO}.bmp" > "${out}/bootloader/ini/L4T-${DISTRO}.ini"
 
 	echo -e "\nAddding switchroot icons"
+
 	mkdir -p "${out}/bootloader/res/"
 	if [[ -d "${cwd}/Hekate-Icons/${DISTRO}" ]]; then
 		cp "${cwd}/Hekate-Icons/${DISTRO}/icon_${DISTRO}.bmp" "${out}/switchroot/${DISTRO}/bootlogo_${DISTRO}.bmp"
