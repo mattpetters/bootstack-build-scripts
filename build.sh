@@ -127,7 +127,7 @@ kernelcmd_run=setenv bootargs \${bootargs_extra} \"root=/dev/\${rootdev} rootfst
 firmware_class.path=/lib/firmware/ \\
 rootlabel_retries=\${rootlabel_retries} \\
 skip_extract=\${skip_extract} \\
-fbcon=primary:\${hdmi_fbconsole} fbcon=rotate:3 \\
+fbcon=map:\${hdmi_fbconsole} fbcon=rotate:3 \\
 consoleblank=0 zswap.zpool=smalloc \\
 tegra_fbmem=0x0@0x1 vpr_resize \\
 nvdec_enabled=0 pmc_reboot2payload.enabled=1 \\
