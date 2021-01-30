@@ -4,7 +4,7 @@ set -e
 # Use last argument as output directory
 cwd="$(realpath "$(dirname "${BASH_SOURCE[0]}")")"
 out="${out:-$(realpath "${@:$#}")}"
-UBOOT="linux-norebase"
+export UBOOT="linux-norebase"
 export ARCH=${ARCH:-"arm64"}
 export CROSS_COMPILE=${CROSS_COMPILE:-"aarch64-linux-gnu-"}
 export CPUS=${CPUS:-$(($(nproc) - 1))}
@@ -78,7 +78,7 @@ uboot_scr() {
 
 uboot() {
 	echo -e "\n\t\tBuilding U-Boot\n"
-	[[ "${DISTRO}" == "android" ]] && UBOOT="${DISTRO}"
+	[[ "${DISTRO}" == "android" ]] && export UBOOT="${DISTRO}"
 
 	if [[ ! -d "${out}/switch-uboot" ]]; then
 		echo -e "\n\t\tCloning switch-uboot, branch: ${UBOOT}"
@@ -86,7 +86,7 @@ uboot() {
 	else
 		cd "${out}/switch-uboot"
 		# Force uboot branch checkout if differing from currently set
-		[[ `git branch --show-current` != ${UBOOT} ]] && git checkout -f ${UBOOT}
+		git checkout -f ${UBOOT}
 		git submodule update --init --recursive .
 	fi
 
