@@ -14,25 +14,22 @@ if env import -t ${fdtovaddr} ${filesize}; then
         if test -n ${id}; then echo hekate id is ${id};
         else echo Rootlabel ID missing; reset; fi
 
-	if test -n ${device}; then echo Device type is ${device};
-	else setenv device mmc; echo Assume device type as ${device}; fi
-
 	setexpr part_num gsub ".*(\\d)" "\\1" ${rootdev}
 fi
 
-if test ${device} = usb; then echo Starting usb stack; usb start; fi;
+usb start
 
-if load mmc ${mmc_index}:1 0x83000000 switchroot/${distro}/Image; then
+if load mmc 0:${part_num} 0x83000000 /boot/Image; then setenv root_mmc_index 0;
+elif load mmc 1:${part_num} 0x83000000 /boot/Image; then setenv root_mmc_index 1;
+elif load mmc ${mmc_index}:1 0x83000000 switchroot/${distro}/Image; then
 	load mmc ${mmc_index}:1 0x92000000 switchroot/${distro}/initramfs
 	load mmc ${mmc_index}:1 0x8d000000 switchroot/${distro}/tegra210-icosa.dtb
-else
-	if load ${device} 0:${part_num} 0x83000000 /boot/Image; then setenv root_mmc_index 0;
-	elif load ${device} 1:${part_num} 0x83000000 /boot/Image; then setenv root_mmc_index 1;
-	else reset; fi;
+else reset; fi;
 
-	load ${device} ${root_mmc_index}:${part_num} 0x92000000 /boot/initramfs
-	load ${device} ${root_mmc_index}:${part_num} 0x8d000000 /boot/tegra210-icosa.dtb
-fi
+if test -n ${root_mmc_index}; then
+	load mmc ${root_mmc_index}:${part_num} 0x92000000 /boot/initramfs
+	load mmc ${root_mmc_index}:${part_num} 0x8d000000 /boot/tegra210-icosa.dtb
+else reset; fi;
 
 fdt addr 0x8d000000 ${filesize}
 

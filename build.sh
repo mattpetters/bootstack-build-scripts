@@ -117,7 +117,6 @@ uenv() {
 	echo -e "id=SWR-`echo ${DISTRO:0:3} | tr '[:lower:]' '[:upper:]'`
 overlays=
 rootdev=mmcblk0p2
-device=mmc
 runlevel=2
 rootlabel_retries=1
 skip_extract=0
