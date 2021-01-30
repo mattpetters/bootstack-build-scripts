@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+;
+[subrepo]
+	remote = https://git.nicholemattera.com/NicholeMattera/Hekate-Icons
+	branch = main
+	commit = 46696e95b321a2371613edd10093457fef94913c
+	parent = 78b841d8f33a096df628ea41ad5d2f412bf73100
+	method = merge
+	cmdver = 0.4.3
