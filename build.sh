@@ -141,7 +141,7 @@ nvdec_enabled=0 pmc_reboot2payload.enabled=1 \\
 pmc_reboot2payload.reboot_action=bootloader \\
 pmc_reboot2payload.default_payload=reboot_payload.bin \\
 pmc_reboot2payload.hekate_config_id=\${id} \\
-swr_dir=\${DISTRO} \"" > "${out}/switchroot/${DISTRO}/uenv.txt"
+swr_dir=\${distro} \"" > "${out}/switchroot/${DISTRO}/uenv.txt"
 }
 
 misc() {
