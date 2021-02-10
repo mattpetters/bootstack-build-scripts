@@ -31,6 +31,10 @@ runlevel
 - Int, default: 2
 Set distribution runlevel.
 
+enable_usb3
+- Bool, default: 0 (false)
+Enable usb3 at the cost of WiFi/BT signal strengh on dock
+
 skip_extract
 - Bool, default: 0 (false)
 Skip modules.tar.gz and update.tar.gz extraction.

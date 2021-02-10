@@ -126,6 +126,7 @@ overlays=
 rootdev=mmcblk0p2
 runlevel=2
 rootlabel_retries=1
+enable_usb3=0
 skip_extract=0
 hdmi_fbconsole=1
 usblogging=console=ttyGS0,115200,8n1
@@ -133,6 +134,7 @@ uartb=no_console_suspend console=ttyS1,115200,8n1 earlycon=tegra_comb_uart,mmio3
 kernelcmd_run=setenv bootargs \${bootargs_extra} \"root=/dev/\${rootdev} rootfstype=ext4 rw access=m2 \\
 firmware_class.path=/lib/firmware/ \\
 rootlabel_retries=\${rootlabel_retries} \\
+enable_usb3=\${enable_usb3} \\
 skip_extract=\${skip_extract} \\
 fbcon=map:\${hdmi_fbconsole} fbcon=rotate:3 \\
 consoleblank=0 zswap.zpool=smalloc \\
