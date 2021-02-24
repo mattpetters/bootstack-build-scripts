@@ -5,15 +5,16 @@ This repository contains our L4T u-boot, u-boot scripts, the latest coreboot.rom
 ## Usage
 
 ```
-Usage: ./build <output_directory>
-Build coreboot, uboot and boot.scr for the L4T
+Usage: ./build [OPTIONS] <output_directory>
+Build switch bootfiles
 
--h, --help              Display help
+-h, --help				Display help
 -c, --coreboot			Build coreboot only
 -d, --distro			Set distribution name
 -n, --nocomp			Build without compressing files
--p, --patch			    Apply coreboot RAM overclock patch
--v, --verbose           Run script in verbose mode. Will print out each step of execution.
+-p, --patch				Apply coreboot RAM overclock patch
+-u, --uboot				Set uboot branch
+-v, --verbose			Run script in verbose mode. Will print out each step of execution.
 ```
 
 Available environment variables :
@@ -25,6 +26,7 @@ CPUS=<default: all - 1>
 DISTRO=<represent the switchroot/<distribution> name> - equivalent to -d, --distro
 NO_COMPRESS=<default: false> - equivalent to -n, --nocomp
 PATCH=<default: false> - equivalent to -p, --patch
+UBOOT=<default: linux-norebase> - equivalent to  -u, --uboot
 ```
 
 ## Automated build
