@@ -4,7 +4,7 @@ set -e
 # Use last argument as output directory
 cwd="$(realpath "$(dirname "${BASH_SOURCE[0]}")")"
 out="${out:-$(realpath "${@:$#}")}"
-export UBOOT="linux-norebase"
+export UBOOT=${UBOOT:-"linux-norebase"}
 export ARCH=${ARCH:-"arm64"}
 export CROSS_COMPILE=${CROSS_COMPILE:-"aarch64-linux-gnu-"}
 export CPUS=${CPUS:-$(($(nproc) - 1))}
@@ -83,13 +83,14 @@ uboot() {
 	if [[ ! -d "${out}/switch-uboot" ]]; then
 		echo -e "\n\t\tCloning switch-uboot, branch: ${UBOOT}"
 		git clone -b ${UBOOT} https://gitlab.com/switchroot/bootstack/switch-uboot "${out}/switch-uboot/"
+		cd "${out}/switch-uboot"
 	else
 		cd "${out}/switch-uboot"
-		# Force uboot branch checkout if differing from currently set
+		# Force uboot branch checkout if different from currently set one
 		git checkout -f ${UBOOT}
-		git submodule update --init --recursive .
 	fi
 
+	git submodule update --init --recursive .
 	sed -i 's/boot_prefixes=\/ \/switchroot\/.*\/\\0/boot_prefixes=\/ \/switchroot\/'${DISTRO}'\/\\0/' "${out}/switch-uboot/include/config_distro_bootcmd.h"
 	make nintendo-switch_defconfig
 	make -j"${CPUS}"
@@ -97,15 +98,18 @@ uboot() {
 
 coreboot() {
 	echo -e "\n\t\tBuilding Coreboot\n"
+
 	if [[ ! -d "${out}/switch-coreboot" ]]; then
 		echo -e "\n\t\tCloning switch-coreboot"
 		git clone https://gitlab.com/switchroot/bootstack/switch-coreboot "${out}/switch-coreboot/"
+		cd "${out}/switch-coreboot/"
 	else
 		cd "${out}/switch-coreboot/"
 		git reset --hard HEAD
 		git pull
-		git submodule update --init --recursive .
 	fi
+	
+	git submodule update --init --recursive .
 
 	if [[ -n "${PATCH}" ]]; then
 		git apply "${cwd}/patch/coreboot_emc_oc.patch"
@@ -173,19 +177,20 @@ compress() {
 
 showHelp() {
 cat << EOF  
-Usage: ./build <output_directory>
-Create a distribution from configuration set in JSON
+Usage: ./build [OPTIONS] <output_directory>
+Build switch bootfiles
 
--h, --help                  	Display help
+-h, --help				Display help
 -c, --coreboot			Build coreboot only
 -d, --distro			Set distribution name
 -n, --nocomp			Build without compressing files
--p, --patch			Apply coreboot RAM overclock patch
--v, --verbose               	Run script in verbose mode. Will print out each step of execution.
+-p, --patch				Apply coreboot RAM overclock patch
+-u, --uboot				Set uboot branch
+-v, --verbose			Run script in verbose mode. Will print out each step of execution.
 EOF
 }
 
-SCRIPT_OPTS='hcd:npv'
+SCRIPT_OPTS='hcd:npu:v'
 typeset -A ARRAY_OPTS
 ARRAY_OPTS=(
 	[help]=h
@@ -193,6 +198,7 @@ ARRAY_OPTS=(
 	[distro]=d
 	[nocomp]=n
 	[patch]=p
+	[uboot]=u
 	[verbose]=v
 )
 
@@ -234,6 +240,9 @@ while getopts ${SCRIPT_OPTS} OPTION ; do
 			;;
 		d)
 			export DISTRO="${OPTARG}"
+			;;
+		u)
+			export UBOOT="${OPTARG}"
 			;;
 		n)
 			export NO_COMPRESS=true
