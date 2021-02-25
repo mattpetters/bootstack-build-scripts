@@ -92,6 +92,9 @@ uboot() {
 
 	git submodule update --init --recursive .
 	sed -i 's/boot_prefixes=\/ \/switchroot\/.*\/\\0/boot_prefixes=\/ \/switchroot\/'${DISTRO}'\/\\0/' "${out}/switch-uboot/include/config_distro_bootcmd.h"
+	if [[ "${UBOOT}" == "android" ]]; then
+		sed -i 's/boot_prefixes=\/ \/switchroot\/.*\/\\0/boot_prefixes=\/ \/switchroot\/'${DISTRO}'\/\\0/' "${out}/switch-uboot/include/configs/nintendo-switch.h"
+	fi
 	make nintendo-switch_defconfig
 	make -j"${CPUS}"
 }
