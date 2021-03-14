@@ -14,7 +14,7 @@ if env import -t ${fdtovaddr} ${filesize}; then
         if test -n ${id}; then echo hekate id is ${id};
         else echo Rootlabel ID missing; reset; fi
 
-	setexpr part_num gsub ".*(\\d)" "\\1" ${rootdev}
+	setexpr part_num gsub ".*[:alpha:](\\d+$)" "\\1" ${rootdev}
 fi
 
 usb start
