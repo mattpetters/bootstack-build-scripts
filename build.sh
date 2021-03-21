@@ -104,7 +104,7 @@ coreboot() {
 
 	if [[ ! -d "${out}/switch-coreboot" ]]; then
 		echo -e "\n\t\tCloning switch-coreboot"
-		git clone https://gitlab.com/switchroot/bootstack/switch-coreboot "${out}/switch-coreboot/"
+		git clone -b switch-linux https://gitlab.com/switchroot/bootstack/switch-coreboot "${out}/switch-coreboot/"
 		cd "${out}/switch-coreboot/"
 	else
 		cd "${out}/switch-coreboot/"
