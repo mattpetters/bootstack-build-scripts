@@ -11,16 +11,18 @@ export CPUS=${CPUS:-$(($(nproc) - 1))}
 
 prepare() {
 	[[ ! -d "${out}" ]] && \
-		echo "${out} is not a valid directory! Exiting.." && exit 1
+		echo "\n${out} is not a valid directory! Exiting.." && exit 1
 
 	[[ -z ${DISTRO} ]] && \
-		echo "DISTRO=${DISTRO} not set correctly ! Exiting." && exit 1
+		echo "\nDISTRO=${DISTRO} not set correctly ! Exiting." && exit 1
 	
 	if [[ `which apt` ]]; then
+	
 		if [[ "$EUID" -ne 0 ]]; then
-			echo "Please run as root"
+			echo "\nPlease run as root"
 			exit
 		fi
+
 		apt update -y && apt install -y \
 			u-boot-tools \
 			cpio \
@@ -69,19 +71,12 @@ prepare() {
 	PATH="$(realpath ${out}/gcc-linaro-7.5.0-2019.12-x86_64_arm-linux-gnueabi)/bin/:$(realpath ${out}/gcc-linaro-7.5.0-2019.12-x86_64_aarch64-linux-gnu)/bin/:$PATH"
 }
 
-uboot_scr() {
-	echo -e "\n\t\tBuilding U-Boot scripts\n"
-	cp "${cwd}/uenv_readme.txt" "${out}/switchroot/${DISTRO}"
-	sed -i 's/^setenv distro.*$/setenv distro '${DISTRO}'/g' "${cwd}/linux_boot.txt"
-	mkimage -V && mkimage -A arm -T script -O linux -d "${cwd}/linux_boot.txt" "${out}/switchroot/${DISTRO}/boot.scr"
-}
-
-uboot() {
-	echo -e "\n\t\tBuilding U-Boot\n"
+coreboot() {
+	echo -e "\nBuilding U-Boot"
 	[[ "${DISTRO}" == "android" ]] && export UBOOT="${DISTRO}"
 
 	if [[ ! -d "${out}/switch-uboot" ]]; then
-		echo -e "\n\t\tCloning switch-uboot, branch: ${UBOOT}"
+		echo -e "\ntCloning switch-uboot, branch: ${UBOOT}"
 		git clone -b ${UBOOT} https://gitlab.com/switchroot/bootstack/switch-uboot "${out}/switch-uboot/"
 		cd "${out}/switch-uboot"
 	else
@@ -97,14 +92,11 @@ uboot() {
 	fi
 	make nintendo-switch_defconfig
 	make -j"${CPUS}"
-}
 
-coreboot() {
-	echo -e "\n\t\tBuilding Coreboot\n"
-
+	echo -e "\nBuilding Coreboot"
 	if [[ ! -d "${out}/switch-coreboot" ]]; then
-		echo -e "\n\t\tCloning switch-coreboot"
-		git clone https://gitlab.com/switchroot/bootstack/switch-coreboot "${out}/switch-coreboot/"
+		echo -e "\nCloning switch-coreboot"
+		git clone -b switch-linux https://gitlab.com/switchroot/bootstack/switch-coreboot "${out}/switch-coreboot/"
 		cd "${out}/switch-coreboot/"
 	else
 		cd "${out}/switch-coreboot/"
@@ -115,7 +107,7 @@ coreboot() {
 	git submodule update --init --recursive .
 
 	if [[ -n "${PATCH}" ]]; then
-		git apply "${cwd}/patch/coreboot_emc_oc.patch"
+		git apply "${cwd}/assets/patch/coreboot_emc_oc.patch"
 	fi
 
 	make nintendo_switch_defconfig
@@ -126,56 +118,32 @@ coreboot() {
 	mv build/coreboot.rom "${out}/switchroot/${DISTRO}"
 }
 
-uenv() {
-	echo -e "\n\t\tCreate uenv.txt"
-	echo -e "id=SWR-`echo ${DISTRO:0:3} | tr '[:lower:]' '[:upper:]'`
-overlays=
-rootdev=mmcblk0p2
-runlevel=2
-rootlabel_retries=1
-enable_usb3=0
-skip_extract=0
-hdmi_fbconsole=1
-usblogging=console=ttyGS0,115200,8n1
-uartb=no_console_suspend console=ttyS1,115200,8n1 earlycon=tegra_comb_uart,mmio32,0x70006040
-kernelcmd_run=setenv bootargs \${bootargs_extra} \"root=/dev/\${rootdev} rootfstype=ext4 rw access=m2 \\
-firmware_class.path=/lib/firmware/ \\
-rootlabel_retries=\${rootlabel_retries} \\
-enable_usb3=\${enable_usb3} \\
-skip_extract=\${skip_extract} \\
-fbcon=map:\${hdmi_fbconsole} fbcon=rotate:3 \\
-consoleblank=0 zswap.zpool=smalloc \\
-tegra_fbmem=0x0@0x1 vpr_resize \\
-nvdec_enabled=0 pmc_reboot2payload.enabled=1 \\
-pmc_reboot2payload.reboot_action=bootloader \\
-pmc_reboot2payload.default_payload=reboot_payload.bin \\
-pmc_reboot2payload.hekate_config_id=\${id} \\
-swr_dir=\${distro} \"" > "${out}/switchroot/${DISTRO}/uenv.txt"
-}
-
 misc() {
+	echo -e "\nBuilding U-Boot scripts"
+	cp "${cwd}/assets/uenv_readme.txt" "${out}/switchroot/${DISTRO}"
+	mkimage -V && mkimage -A arm -T script -O linux -d "${cwd}/assets/boot.txt" "${out}/switchroot/${DISTRO}/boot.scr"
+
+	echo -e "\nCreating uenv.txt"
+	cp "${cwd}/assets/uenv.txt" "${out}/switchroot/${DISTRO}"
+	new_id=SWR-$(echo ${DISTRO:0:3} | tr '[:lower:]' '[:upper:]')
+	sed -i 's/id=.*$/id='$new_id'/g' "${out}/switchroot/${DISTRO}/uenv.txt"
+
 	echo -e "\nCreating ini file"
 	echo -e "[L4T ${DISTRO}]
 payload=switchroot/${DISTRO}/coreboot.rom
-id=SWR-`echo ${DISTRO:0:3} | tr '[:lower:]' '[:upper:]'`
+id=SWR-$(echo ${DISTRO:0:3} | tr '[:lower:]' '[:upper:]')
 icon=bootloader/res/icon_${DISTRO}_hue.bmp
 logopath=switchroot/${DISTRO}/bootlogo_${DISTRO}.bmp" > "${out}/bootloader/ini/L4T-${DISTRO}.ini"
 
 	echo -e "\nAddding switchroot icons"
-
 	mkdir -p "${out}/bootloader/res/"
-	if [[ -d "${cwd}/Hekate-Icons/${DISTRO}" ]]; then
-		cp "${cwd}/Hekate-Icons/${DISTRO}/icon_${DISTRO}.bmp" "${out}/switchroot/${DISTRO}/bootlogo_${DISTRO}.bmp"
-		cp "${cwd}/Hekate-Icons/${DISTRO}/icon_${DISTRO}_hue.bmp" "${out}/bootloader/res/icon_${DISTRO}_hue.bmp"
+	if [[ -d "${cwd}/assets/Hekate-Icons/${DISTRO}" ]]; then
+		cp "${cwd}/assets/Hekate-Icons/${DISTRO}/icon_${DISTRO}.bmp" "${out}/switchroot/${DISTRO}/bootlogo_${DISTRO}.bmp"
+		cp "${cwd}/assets/Hekate-Icons/${DISTRO}/icon_${DISTRO}_hue.bmp" "${out}/bootloader/res/icon_${DISTRO}_hue.bmp"
 	else
-		cp "${cwd}/Hekate-Icons/linux/icon_linux.bmp" "${out}/switchroot/${DISTRO}/bootlogo_${DISTRO}.bmp"
-		cp "${cwd}/Hekate-Icons/linux/icon_linux_hue.bmp" "${out}/bootloader/res/icon_${DISTRO}_hue.bmp"
+		cp "${cwd}/assets/Hekate-Icons/linux/icon_linux.bmp" "${out}/switchroot/${DISTRO}/bootlogo_${DISTRO}.bmp"
+		cp "${cwd}/assets/Hekate-Icons/linux/icon_linux_hue.bmp" "${out}/bootloader/res/icon_${DISTRO}_hue.bmp"
 	fi
-}
-
-compress() {
-	7z a "${out}/switchroot-${DISTRO}-boot-$(date '+%Y-%m-%d').7z" "${out}/bootloader/" "${out}/switchroot/"
-	rm -rf "${out}/bootloader/" "${out}/switchroot/"
 }
 
 showHelp() {
@@ -261,18 +229,18 @@ done
 shift $((OPTIND-1))
 
 prepare
-uboot
 coreboot
 if [[ -n "${COREBOOT}" ]]; then
 	mv "${out}/switchroot/${DISTRO}/coreboot.rom" "${out}"
 	rm -rf "${out}/switchroot/" "${out}/bootloader/"
-	echo -e "\nBuilding coreboot only finished !"
+	echo -e "\nDone building coreboot!"
 	exit 0
 fi
-uboot_scr
-uenv
+
 misc
+
 if [[ -z ${NO_COMPRESS} ]]; then
-	compress
+	7z a "${out}/switchroot-${DISTRO}-boot-$(date '+%Y-%m-%d').7z" "${out}/bootloader/" "${out}/switchroot/"
+	rm -rf "${out}/bootloader/" "${out}/switchroot/"
+	echo -e "\nDone building! Output: ${out}/switchroot-${DISTRO}-boot-$(date '+%Y-%m-%d').7z"
 fi
-echo -e "\n\t\tDone building ! Output: ${out}/switchroot-${DISTRO}-boot-$(date '+%Y-%m-%d').7z"

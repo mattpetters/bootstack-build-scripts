@@ -1,13 +1,12 @@
 uenv.txt configuration :
 
 Overlays options:
-Add the overlays you want to use here (refer to overlays/overlays_readme.txt
-for avalaible overlays and what they do)
+Add the overlays you want to use here 
 
 tegra210-icosa_emmc-overlay
 Enables eMMC booting
 
-tegra210-icosa-UART-B-overlay
+tegra210-UART-B-overlay
 Enables UARTB logging.
 
 usb_logging

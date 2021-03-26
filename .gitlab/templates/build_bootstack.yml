@@ -1,12 +1,10 @@
 .build:
-  tags:
-    - pegasus
   image: "$CI_REGISTRY_IMAGE"
   stage: build
   variables:
     DISTRO: ""
   script:
-    - CPUS=$(nproc) ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- DISTRO=${DISTRO} ./build.sh "$CI_PROJECT_DIR/out/"
+    - CPUS=$(nproc) DISTRO=${DISTRO} ./build.sh "$CI_PROJECT_DIR/out/"
   artifacts:
     paths:
       - "$CI_PROJECT_DIR/out/*.7z"
