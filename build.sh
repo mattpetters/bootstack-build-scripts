@@ -126,7 +126,7 @@ misc() {
 	echo -e "\nCreating uenv.txt"
 	cp "${cwd}/assets/uenv.txt" "${out}/switchroot/${DISTRO}"
 	new_id=SWR-$(echo ${DISTRO:0:3} | tr '[:lower:]' '[:upper:]')
-	sed -i 's/id=.*$/id='$new_id'/g' "${out}/switchroot/${DISTRO}/uenv.txt"
+	sed -i 's/hekate_id=.*$/hekate_id='$new_id'/g' "${out}/switchroot/${DISTRO}/uenv.txt"
 
 	echo -e "\nCreating ini file"
 	echo -e "[L4T ${DISTRO}]
