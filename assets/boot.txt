@@ -10,15 +10,13 @@ elif load mmc 0:${distro_bootpart} ${fdtovaddr} ${prefix}/uenv.txt; then; setenv
 else echo No boot device found; reset; fi
 
 if env import -t ${fdtovaddr} ${filesize}; then
-        if test -n ${id}; then echo hekate id is ${id};
+        if test -n ${hekate_id}; then echo hekate id is ${hekate_id};
         else echo Rootlabel ID missing; reset; fi
 
-		if test -n ${rootdev}; then echo rootdev is ${rootdev};
+	if test -n ${rootdev}; then echo rootdev is ${rootdev};
         else echo Rootdev missing; reset; fi
-
-		setexpr pnum gsub ".*[:alpha:](\\d+$)" "\\1" ${rootdev}
-
-		setenv -f rootdev
+		
+        setexpr pnum gsub ".*[:alpha:](\\d+$)" "\\1" ${rootdev
 fi
 
 if load mmc ${devnum}:${distro_bootpart} 0x83000000 ${prefix}/Image; then
@@ -43,7 +41,7 @@ if test -n ${overlays}; then
                 fdt resize 8192
 
                 if load mmc ${devnum}:${distro_bootpart} ${ovcfgaddr} switchroot/overlays/${ov}.dtbo && fdt apply ${ovcfgaddr}; then
-					echo Successfully loaded ${ov}.dtbo...
+			echo Successfully loaded ${ov}.dtbo...
                 fi
 
                 # Add additional bootargs for UART-B
@@ -66,6 +64,8 @@ if test -n ${overlays}; then
 fi
 
 run kernelcmd_run
+
+setenv bootargs ${bootargs} "vpr_resize tegra_fbmem=0x384000@0xf5a00000 "
 
 usb reset
 booti 0x83000000 0x92000000 0x8d000000
