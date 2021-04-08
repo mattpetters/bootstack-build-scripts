@@ -16,7 +16,7 @@ if env import -t ${fdtovaddr} ${filesize}; then
 	if test -n ${rootdev}; then echo rootdev is ${rootdev};
         else echo Rootdev missing; reset; fi
 		
-        setexpr pnum gsub ".*[:alpha:](\\d+$)" "\\1" ${rootdev
+        setexpr pnum gsub ".*[:alpha:](\\d+$)" "\\1" ${rootdev}
 fi
 
 if load mmc ${devnum}:${distro_bootpart} 0x83000000 ${prefix}/Image; then
