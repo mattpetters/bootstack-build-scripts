@@ -113,7 +113,7 @@ coreboot() {
 	make nintendo_switch_defconfig
 	make iasl
 	# Important won't build with more threads...
-	make -j2
+	make -j2 BUILD_VER_SUFFIX=SLD0
 
 	mv build/coreboot.rom "${out}/switchroot/${DISTRO}"
 }
