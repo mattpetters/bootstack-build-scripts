@@ -1,71 +1,102 @@
-setenv ovcfgaddr 0x8d100000
-setenv fdtovaddr 0x8d200000
-setenv evtmpaddr 0x8d300000
+# Set defaults env variables. These can be overridden by uenv.txt.
+setenv boot_dir ${prefix}
+setenv rootdev mmcblk0p2
+setenv hekate_id SWR-UBU
+setenv rootfstype ext4
+setenv rootfs_fw /lib/firmware/
+setenv reboot_action bootloader
+setenv hdmi_fbconsole 1
+setenv rootlabel_retries 1
 
-usb start
+# Set logging params for each serial type.
+setenv uarta "no_console_suspend console=ttyS0,115200,8n1"
+setenv uartb "no_console_suspend console=ttyS1,115200,8n1"
+setenv uartc "no_console_suspend console=ttyS2,115200,8n1"
+setenv usblogging "console=ttyGS0,115200,8n1"
 
-# Load uenv from mmc 0 or 1 using prefix builtin variable loaded from coreboot
-if load mmc 1:${distro_bootpart} ${fdtovaddr} ${prefix}/uenv.txt; then; setenv devnum 1
-elif load mmc 0:${distro_bootpart} ${fdtovaddr} ${prefix}/uenv.txt; then; setenv devnum 0
-else echo No boot device found; reset; fi
+# Set important addresses.
+setenv kernaddr 0x83000000
+setenv initaddr 0x92000000
+setenv fdtraddr 0x8d000000
 
-if env import -t ${fdtovaddr} ${filesize}; then
-        if test -n ${hekate_id}; then echo hekate id is ${hekate_id};
-        else echo Rootlabel ID missing; reset; fi
+# Set temp addresses.
+setenv enviraddr 0x8d100000
+setenv evovtaddr 0x8d200000
+setenv fdtovaddr 0x8d300000
 
-	if test -n ${rootdev}; then echo rootdev is ${rootdev};
-        else echo Rootdev missing; reset; fi
-		
-        setexpr pnum gsub ".*[:alpha:](\\d+$)" "\\1" ${rootdev}
-fi
+# Load enviroment if found.
+if load ${devtype} ${devnum}:${distro_bootpart} ${enviraddr} ${boot_dir}/uenv.txt; then env import -t ${enviraddr} ${filesize}; fi
 
-if load mmc ${devnum}:${distro_bootpart} 0x83000000 ${prefix}/Image; then
-	load mmc ${devnum}:${distro_bootpart} 0x92000000 ${prefix}/initramfs
-	load mmc ${devnum}:${distro_bootpart} 0x8d000000 ${prefix}/tegra210-icosa.dtb
-elif load ${devtype} ${devnum}:${pnum} 0x83000000 /boot/Image; then
-	load ${devtype} ${devnum}:${pnum} 0x92000000 /boot/initramfs
-	load ${devtype} ${devnum}:${pnum} 0x8d000000 /boot/tegra210-icosa.dtb
-else echo Unable to load kernel Image; reset; fi
+###### If boot_dir was changed from uenv.txt then it will be used to everything from this point on. ######
 
-# Store dtb filesize
-setenv dtb_part_size ${filesize}
+# Load Kernel, Initramfs and DT. If failed, reset.
+if load ${devtype} ${devnum}:${distro_bootpart} ${kernaddr} ${boot_dir}/Image; then echo Kernel loaded; else echo Kernel failed; reset; fi
+if load ${devtype} ${devnum}:${distro_bootpart} ${initaddr} ${boot_dir}/initramfs; then echo Initramfs loaded; else echo Initramfs failed; reset; fi
+if load ${devtype} ${devnum}:${distro_bootpart} ${fdtraddr} ${boot_dir}/tegra210-icosa.dtb; then echo DT loaded; else echo DT failed; reset; fi
 
-# Load dtb in memory
-fdt addr 0x8d000000 ${dtb_part_size}
+# Set dtb address and size from above.
+fdt addr ${fdtraddr} ${filesize}
 
-# patch dtb with overlays if they exist
+# Patch dtb and cmdline with overlays if they exist.
 if test -n ${overlays}; then
-        echo loaded overlay: ${overlays}
-        for ov in ${overlays}; do
-            echo overlaying ${ov}...
-                fdt resize 8192
+	echo loading overlays: ${overlays}
+	for ov in ${overlays}; do
+	    echo overlaying ${ov}...
 
-                if load mmc ${devnum}:${distro_bootpart} ${ovcfgaddr} switchroot/overlays/${ov}.dtbo && fdt apply ${ovcfgaddr}; then
+		if load ${devtype} ${devnum}:${distro_bootpart} ${fdtovaddr} ${boot_dir}/overlays/${ov}.dtbo && fdt resize 8192 && fdt apply ${fdtovaddr}; then
 			echo Successfully loaded ${ov}.dtbo...
-                fi
 
-                # Add additional bootargs for UART-B
-                if test ${ov} = tegra210-UART-B-overlay; then setenv bootargs_extra ${bootargs_extra} ${uartb}; echo Enabled UART-B logging; fi
+			# Add additional bootargs for UART-A.
+			if test ${ov} = tegra210-icosa-UART-A-overlay; then setenv bootargs_extra ${bootargs_extra} ${uarta}; echo Enabled UART-A logging; fi
+			# Add additional bootargs for UART-B.
+			if test ${ov} = tegra210-icosa-UART-B-overlay; then setenv bootargs_extra ${bootargs_extra} ${uartb}; echo Enabled UART-B logging; fi
+			# Add additional bootargs for UART-C.
+			if test ${ov} = tegra210-icosa-UART-C-overlay; then setenv bootargs_extra ${bootargs_extra} ${uartc}; echo Enabled UART-C logging; fi
+		fi
 
-                # Add additional bootargs for Serial USB
-                if test ${ov} = usb_logging; then setenv bootargs_extra ${usblogging} ${bootargs_extra}; echo Enabled usb serial logging; fi
+		# Add additional bootargs for Serial USB.
+		if test ${ov} = usb_logging; then setenv bootargs_extra ${usblogging} ${bootargs_extra}; echo Enabled usb serial logging; fi
 
-                # Disable rootdev search done by initramfs
-                if test ${ov} = auto_rootdev_disable; then setenv bootargs_extra ${bootargs_extra} "auto_rootdev_disable"; fi
+		# Disable rootdev search done by initramfs.
+		if test ${ov} = auto_rootdev_disable; then setenv bootargs_extra ${bootargs_extra} "auto_rootdev_disable"; fi
 
-                # Override and launch nfs bootargs here
-                if test ${ov} = nfs; then
-                        if load mmc ${devnum}:${distro_bootpart} ${evtmpaddr} switchroot/overlays/nfs.txt && env import -t ${evtmpaddr} ${dtb_part_size}; then
-                                run nfsargs_run
-                                echo Using NFS root
-                        fi
-                fi
-        done
+		# Override and launch nfs bootargs here.
+		if test ${ov} = nfs; then
+			if load ${devtype} ${devnum}:${distro_bootpart} ${evovtaddr} ${boot_dir}/overlays/nfs.txt && env import -t ${evovtaddr} ${filesize}; then
+				run nfsargs_run
+				echo Using NFS root
+			fi
+		fi
+	done
 fi
 
-run kernelcmd_run
+# Prepare display panel id from Nyx.
+cp.b 0xED838002 0xED838001 0x1
+mw.b 0xED838002 0x0 0x1
 
-setenv bootargs ${bootargs} "vpr_resize tegra_fbmem=0x384000@0xf5a00000 "
+# Get display panel handle.
+if itest.w *0xED838000 == 0xf20; then echo Display is INNO; fdt get value DHANDLE /host1x/dsi/panel-i-720p-6-2 phandle
+elif itest.w *0xED838000 == 0xf30; then echo Display is AUO; fdt get value DHANDLE /host1x/dsi/panel-a-720p-6-2 phandle
+elif itest.b *0xED838000 == 0x10; then echo Display is JDI; fdt get value DHANDLE /host1x/dsi/panel-j-720p-6-2 phandle
+else Display is Unknown; fi
 
+# Set new active display panel handle.
+if test -n ${DHANDLE}; then echo Setting Display panel; fdt resize 8192; fdt set /host1x/dsi nvidia,active-panel <$DHANDLE>; fi
+
+# Set kernel cdmline.
+setenv bootargs ${bootargs_extra} "root=/dev/${rootdev} rootfstype=${rootfstype} rw \
+ firmware_class.path=${rootfs_fw} access=m2 \
+ rootlabel_retries=${rootlabel_retries} \
+ swr_dir=${boot_dir} \
+ pmc_reboot2payload.enabled=1 \
+ pmc_reboot2payload.reboot_action=${reboot_action} \
+ pmc_reboot2payload.default_payload=reboot_payload.bin \
+ pmc_reboot2payload.hekate_config_id=${hekate_id} \
+ fbcon=primary:${hdmi_fbconsole} consoleblank=0 \
+ nvdec_enabled=0 vpr_resize tegra_fbmem=0x400000@0xf5a00000 "
+
+# Reset usb and prepare it for kernel.
 usb reset
-booti 0x83000000 0x92000000 0x8d000000
+
+# Boot kernel.
+booti ${kernaddr} ${initaddr} ${fdtraddr}
