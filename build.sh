@@ -119,19 +119,24 @@ coreboot() {
 }
 
 misc() {
+	new_id=SWR-$(echo ${DISTRO:0:3} | tr '[:lower:]' '[:upper:]')
+
 	echo -e "\nBuilding U-Boot scripts"
 	cp "${cwd}/assets/uenv_readme.txt" "${out}/switchroot/${DISTRO}"
-	mkimage -V && mkimage -A arm -T script -O linux -d "${cwd}/assets/boot.txt" "${out}/switchroot/${DISTRO}/boot.scr"
+
+	cp "${cwd}/assets/boot.txt" "${out}"
+	sed -i 's/setenv hekate_id.*$/setenv hekate_id '$new_id'/g' "${out}/boot.txt"
+	mkimage -V && mkimage -A arm -T script -O linux -d "${out}/boot.txt" "${out}/switchroot/${DISTRO}/boot.scr"
+	rm "${out}/boot.txt"
 
 	echo -e "\nCreating uenv.txt"
 	cp "${cwd}/assets/uenv.txt" "${out}/switchroot/${DISTRO}"
-	new_id=SWR-$(echo ${DISTRO:0:3} | tr '[:lower:]' '[:upper:]')
 	sed -i 's/hekate_id=.*$/hekate_id='$new_id'/g' "${out}/switchroot/${DISTRO}/uenv.txt"
 
 	echo -e "\nCreating ini file"
 	echo -e "[L4T ${DISTRO}]
 payload=switchroot/${DISTRO}/coreboot.rom
-id=SWR-$(echo ${DISTRO:0:3} | tr '[:lower:]' '[:upper:]')
+id=$new_id
 icon=bootloader/res/icon_${DISTRO}_hue.bmp
 logopath=switchroot/${DISTRO}/bootlogo_${DISTRO}.bmp" > "${out}/bootloader/ini/L4T-${DISTRO}.ini"
 
