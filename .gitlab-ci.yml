@@ -29,6 +29,11 @@ debian-build:
   variables:
     DISTRO: debian
 
+fedora-build:
+  extends: .build
+  variables:
+    DISTRO: fedora
+
 focal-build:
   extends: .build
   variables:
@@ -38,6 +43,11 @@ groovy-build:
   extends: .build
   variables:
     DISTRO: groovy
+
+leap-build:
+  extends: .build
+  variables:
+    DISTRO: leap
 
 tumbleweed-build:
   extends: .build
