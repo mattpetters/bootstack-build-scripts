@@ -4,7 +4,8 @@
   variables:
     DISTRO: ""
   script:
-    - NO_COMPRESS=true COREBOOT=true CPUS=$(nproc) DISTRO=${DISTRO} ./build.sh "$CI_PROJECT_DIR/out/"
+    - CPUS=$(nproc) DISTRO=${DISTRO} ./build.sh "$CI_PROJECT_DIR/out/"
+    - mv "$CI_PROJECT_DIR/out/*.7z" "$CI_PROJECT_DIR/"
   artifacts:
     paths:
-      - "$CI_PROJECT_DIR/out/coreboot.rom"
+      - "$CI_PROJECT_DIR/*.7z"
