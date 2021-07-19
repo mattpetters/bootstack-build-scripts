@@ -1,5 +1,4 @@
 #!/bin/bash
-set -e
 
 # Use last argument as output directory
 cwd="$(realpath "$(dirname "${BASH_SOURCE[0]}")")"
