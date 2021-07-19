@@ -9,7 +9,6 @@
 # rootfstype=ext4
 # rootfs_fw=/lib/firmware/
 #
-# linux_dir=ubuntu
 # hekate_id=SWR-UBU
 # reboot_action=bootloader
 #
@@ -19,6 +18,5 @@
 
 overlays=
 rootdev=mmcblk0p2
-rootlabel_retries=1
 hekate_id=SWR-UBU
 reboot_action=bootloader
