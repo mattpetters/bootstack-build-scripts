@@ -14,20 +14,10 @@ arch-build:
   variables:
     DISTRO: arch
 
-bionic-build:
+bullseye-build:
   extends: .build
   variables:
-    DISTRO: bionic
-
-centos-build:
-  extends: .build
-  variables:
-    DISTRO: centos
-
-debian-build:
-  extends: .build
-  variables:
-    DISTRO: debian
+    DISTRO: bullseye
 
 fedora-build:
   extends: .build
@@ -39,10 +29,15 @@ focal-build:
   variables:
     DISTRO: focal
 
-groovy-build:
+gentoo-build:
   extends: .build
   variables:
-    DISTRO: groovy
+    DISTRO: gentoo
+
+hirsute-build:
+  extends: .build
+  variables:
+    DISTRO: hirsute
 
 leap-build:
   extends: .build
