@@ -244,7 +244,7 @@ fi
 misc
 
 if [[ -z ${NO_COMPRESS} ]]; then
-	7z a "${out}/switchroot-${DISTRO}-boot-$(date '+%Y-%m-%d').7z" "${out}/bootloader/" "${out}/switchroot/"
+	7z a "${out}/switchroot-${DISTRO}-boot.7z" "${out}/bootloader/" "${out}/switchroot/"
 	rm -rf "${out}/bootloader/" "${out}/switchroot/"
-	echo -e "\nDone building! Output: ${out}/switchroot-${DISTRO}-boot-$(date '+%Y-%m-%d').7z"
+	echo -e "\nDone building! Output: ${out}/switchroot-${DISTRO}-boot.7z"
 fi
