@@ -15,7 +15,7 @@ cbfstool:
     DISTRO: ubuntu
   artifacts:
     paths:
-      - "CI_PROJECT_DIR/switch-coreboot/util/cbfstool/cbfstool"
+      - "$CI_PROJECT_DIR/switch-coreboot/util/cbfstool/cbfstool"
 
 arch-build:
   extends: .build
