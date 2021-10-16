@@ -8,3 +8,4 @@
   artifacts:
     paths:
       - "$CI_PROJECT_DIR/*.7z"
+      - "$CI_PROJECT_DIR/switch-uboot/u-boot.elf"

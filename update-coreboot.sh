@@ -45,6 +45,6 @@ make -j${CPUS}
 
 # Update u-boot in coreboot
 echo "cbfstool \"$COREBOOT\" remove -v -n fallback/payload"
-cbfstool "$COREBOOT" remove -v -n fallback/payload
+./cbfstool "$COREBOOT" remove -v -n fallback/payload
 echo "cbfstool \"$COREBOOT\" add-payload -v -n fallback/payload  -f \"$UBOOT\" -c lzma"
-cbfstool "$COREBOOT" add-payload -v -n fallback/payload  -f "$UBOOT" -c lzma
+./cbfstool "$COREBOOT" add-payload -v -n fallback/payload  -f "$UBOOT" -c lzma

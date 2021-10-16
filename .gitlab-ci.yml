@@ -9,6 +9,14 @@ include:
   - local: .gitlab/templates/build_docker_ci_images.yml
   - local: .gitlab/templates/build_bootstack.yml
 
+cbfstool:
+  extends: .build
+  variables:
+    DISTRO: ubuntu
+  artifacts:
+    paths:
+      - "CI_PROJECT_DIR/switch-coreboot/util/cbfstool/cbfstool"
+
 arch-build:
   extends: .build
   variables:
@@ -38,6 +46,11 @@ hirsute-build:
   extends: .build
   variables:
     DISTRO: hirsute
+
+impish-build:
+  extends: .build
+  variables:
+    DISTRO: impish
 
 leap-build:
   extends: .build

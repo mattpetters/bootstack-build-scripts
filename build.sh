@@ -69,10 +69,7 @@ prepare() {
 	fi
 
 	PATH="$(realpath ${out}/gcc-linaro-7.5.0-2019.12-x86_64_arm-linux-gnueabi)/bin/:$(realpath ${out}/gcc-linaro-7.5.0-2019.12-x86_64_aarch64-linux-gnu)/bin/:$PATH"
-}
 
-coreboot() {
-	echo -e "\nBuilding U-Boot"
 	[[ "${DISTRO}" == "android" ]] && export UBOOT="${DISTRO}"
 
 	if [[ ! -d "${out}/switch-uboot" ]]; then
@@ -84,16 +81,8 @@ coreboot() {
 		# Force uboot branch checkout if different from currently set one
 		git checkout -f ${UBOOT}
 	fi
-
 	git submodule update --init --recursive .
-	sed -i 's/boot_prefixes=\/ \/switchroot\/.*\/\\0/boot_prefixes=\/ \/switchroot\/'${DISTRO}'\/\\0/' "${out}/switch-uboot/include/config_distro_bootcmd.h"
-	if [[ "${UBOOT}" == "android" ]]; then
-		sed -i 's/boot_prefixes=\/ \/switchroot\/.*\/\\0/boot_prefixes=\/ \/switchroot\/'${DISTRO}'\/\\0/' "${out}/switch-uboot/include/configs/nintendo-switch.h"
-	fi
-	make nintendo-switch_defconfig
-	make -j"${CPUS}"
 
-	echo -e "\nBuilding Coreboot"
 	if [[ ! -d "${out}/switch-coreboot" ]]; then
 		echo -e "\nCloning switch-coreboot"
 		git clone -b switch-linux https://gitlab.com/switchroot/bootstack/switch-coreboot "${out}/switch-coreboot/"
@@ -109,7 +98,27 @@ coreboot() {
 	if [[ -n "${PATCH}" ]]; then
 		git apply "${cwd}/assets/patch/coreboot_emc_oc.patch"
 	fi
+}
 
+cbfstool() {	
+	cd "${out}/switch-coreboot/util/cbfstool/"
+	make -j${CPUS}
+}
+
+uboot() {
+	echo -e "\nBuilding U-Boot"
+	cd "${out}/switch-uboot"
+	sed -i 's/boot_prefixes=\/ \/switchroot\/.*\/\\0/boot_prefixes=\/ \/switchroot\/'${DISTRO}'\/\\0/' "${out}/switch-uboot/include/config_distro_bootcmd.h"
+	if [[ "${UBOOT}" == "android" ]]; then
+		sed -i 's/boot_prefixes=\/ \/switchroot\/.*\/\\0/boot_prefixes=\/ \/switchroot\/'${DISTRO}'\/\\0/' "${out}/switch-uboot/include/configs/nintendo-switch.h"
+	fi
+	make nintendo-switch_defconfig
+	make -j"${CPUS}"
+}
+
+coreboot() {
+	echo -e "\nBuilding Coreboot"
+	cd "${out}/switch-coreboot/"
 	make nintendo_switch_defconfig
 	make iasl
 	# Important won't build with more threads...
@@ -234,6 +243,8 @@ done
 shift $((OPTIND-1))
 
 prepare
+cbfstool
+uboot
 coreboot
 if [[ -n "${COREBOOT}" ]]; then
 	mv "${out}/switchroot/${DISTRO}/coreboot.rom" "${out}"
