@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 
 ARG DEBIAN_FRONTEND=noninteractive
 RUN chmod 1777 /tmp
@@ -21,12 +21,12 @@ RUN apt update -y && apt install -y \
 	python-dev \
 	bc \
 	curl \
-	gnat-5 \
 	libncurses5-dev \
 	m4 \
 	zlib1g-dev \
 	p7zip-full \
 	wget \
+    acpica-tools \
   && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /build

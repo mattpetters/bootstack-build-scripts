@@ -46,7 +46,8 @@ prepare() {
 			m4 \
 			zlib1g-dev \
 			p7zip-full \
-			wget || true
+			wget \
+            acpica-tools || true
 	else
 		echo -e "\nNot a debian based system. Please make sure you've installed all the dependencies required for building (refer to README)"
 	fi
@@ -126,7 +127,6 @@ coreboot() {
 	echo -e "\nBuilding Coreboot"
 	cd "${out}/switch-coreboot/"
 	make nintendo_switch_defconfig
-	make iasl
 	# Important won't build with more threads...
 	make -j2 BUILD_VER_SUFFIX=SLD0
 
