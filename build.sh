@@ -111,7 +111,13 @@ uboot() {
 	if [[ "${UBOOT}" == "android" ]]; then
 		sed -i 's/boot_prefixes=\/ \/switchroot\/.*\/\\0/boot_prefixes=\/ \/switchroot\/'${DISTRO}'\/\\0/' "${out}/switch-uboot/include/configs/nintendo-switch.h"
 	fi
-	git apply "${cwd}/assets/patch/uboot.diff"
+
+	# Apply uboot patch on non ubuntu bionic distro
+	source /etc/os-release
+	if [[ $(echo $VERSION | cut -d" " -f 1) != "18.04" ]]; then
+		git apply "${cwd}/assets/patch/uboot.diff"
+	fi
+
 	make nintendo-switch_defconfig
 	make -j"${CPUS}"
 }
