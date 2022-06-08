@@ -111,6 +111,7 @@ uboot() {
 	if [[ "${UBOOT}" == "android" ]]; then
 		sed -i 's/boot_prefixes=\/ \/switchroot\/.*\/\\0/boot_prefixes=\/ \/switchroot\/'${DISTRO}'\/\\0/' "${out}/switch-uboot/include/configs/nintendo-switch.h"
 	fi
+	git apply "${cwd}/assets/patch/uboot.diff"
 	make nintendo-switch_defconfig
 	make -j"${CPUS}"
 }
