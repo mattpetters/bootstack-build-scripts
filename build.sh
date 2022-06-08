@@ -46,8 +46,7 @@ prepare() {
 			m4 \
 			zlib1g-dev \
 			p7zip-full \
-			wget \
-			gnat-5 || true
+			wget || true
 	else
 		echo -e "\nNot a debian based system. Please make sure you've installed all the dependencies required for building (refer to README)"
 	fi
