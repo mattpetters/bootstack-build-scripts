@@ -8,18 +8,19 @@ export UBOOT=${UBOOT:-"linux-norebase"}
 export ARCH=${ARCH:-"arm64"}
 export CROSS_COMPILE=${CROSS_COMPILE:-"aarch64-linux-gnu-"}
 export CPUS=${CPUS:-$(($(nproc) - 1))}
+export SLD0=${SLD0:-"BUILD_VER_SUFFIX=SLD0"}
 
 prepare() {
 	[[ ! -d "${out}" ]] && \
-		echo "\n${out} is not a valid directory! Exiting.." && exit 1
+		echo -e "\n${out} is not a valid directory! Exiting.." && exit 1
 
 	[[ -z ${DISTRO} ]] && \
-		echo "\nDISTRO=${DISTRO} not set correctly ! Exiting." && exit 1
+		echo -e "\nDISTRO=${DISTRO} not set correctly ! Exiting." && exit 1
 	
-	if [[ `which apt` ]]; then
+	if [[ $(which apt) ]]; then
 	
 		if [[ "$EUID" -ne 0 ]]; then
-			echo "\nPlease run as root"
+			echo -e "\nPlease run as root"
 			exit
 		fi
 
@@ -128,7 +129,7 @@ coreboot() {
 	cd "${out}/switch-coreboot/"
 	make nintendo_switch_defconfig
 	# Important won't build with more threads...
-	make -j2 BUILD_VER_SUFFIX=SLD0
+	make -j2 ${SDL0}
 
 	mv build/coreboot.rom "${out}/switchroot/${DISTRO}"
 }
@@ -177,11 +178,12 @@ Build switch bootfiles
 -n, --nocomp			Build without compressing files
 -p, --patch				Apply coreboot RAM overclock patch
 -u, --uboot				Set uboot branch
+-s, --sld				Build without SLD0 support
 -v, --verbose			Run script in verbose mode. Will print out each step of execution.
 EOF
 }
 
-SCRIPT_OPTS='hcd:npu:v'
+SCRIPT_OPTS='hcd:npu:sv'
 typeset -A ARRAY_OPTS
 ARRAY_OPTS=(
 	[help]=h
@@ -190,6 +192,7 @@ ARRAY_OPTS=(
 	[nocomp]=n
 	[patch]=p
 	[uboot]=u
+	[sld]=s
 	[verbose]=v
 )
 
@@ -240,6 +243,9 @@ while getopts ${SCRIPT_OPTS} OPTION ; do
 			;;
 		p)
 			export PATCH=true
+			;;
+		s)
+			export SLD0=""
 			;;
 		v)
 			set -xv  # Set xtrace and verbose mode.
