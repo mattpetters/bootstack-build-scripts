@@ -1,4 +1,4 @@
-FROM ubuntu:21.04
+FROM ubuntu:jammy
 
 ARG DEBIAN_FRONTEND=noninteractive
 RUN chmod 1777 /tmp
