@@ -16,6 +16,7 @@ RUN apt update -y && apt install -y \
 	python3 \
 	python3-distutils \
 	python3-dev \
+	python-is-python3 \
 	swig \
 	python2-dev \
 	python2 \
