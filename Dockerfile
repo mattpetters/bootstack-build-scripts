@@ -17,8 +17,8 @@ RUN apt update -y && apt install -y \
 	python3-distutils \
 	python3-dev \
 	swig \
-	python \
-	python-dev \
+	python2-dev \
+	python2 \
 	bc \
 	curl \
 	libncurses5-dev \
