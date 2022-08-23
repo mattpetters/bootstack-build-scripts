@@ -52,6 +52,13 @@ hdmi_fbconsole=
  0: Enables console logging on built-in screen
  1: Enables console logging on DP/HDMI/VGA
 
+orientation=
+ Set fbcon rotation (default 3)
+ 0 - normal orientation (0 degree)
+ 1 - clockwise orientation (90 degrees)
+ 2 - upside down orientation (180 degrees)
+ 3 - counterclockwise orientation (270 degrees)
+
 usblogging=
  Overlay options for usb logging.
 
