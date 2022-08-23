@@ -5,6 +5,7 @@ setenv hekate_id SWR-UBU
 setenv rootfstype ext4
 setenv rootfs_fw /lib/firmware/
 setenv hdmi_fbconsole 1
+setenv orientation 3
 setenv reboot_action bootloader
 setenv rootlabel_retries 1
 
@@ -92,7 +93,7 @@ setenv bootargs ${bootargs_extra} "root=/dev/${rootdev} rootfstype=${rootfstype}
  pmc_reboot2payload.reboot_action=${reboot_action} \
  pmc_reboot2payload.default_payload=reboot_payload.bin \
  pmc_reboot2payload.hekate_config_id=${hekate_id} \
- fbcon=map:${hdmi_fbconsole} consoleblank=0 \
+ fbcon=map:${hdmi_fbconsole},rotation:${orientation} consoleblank=0 \
  nvdec_enabled=0 vpr_resize tegra_fbmem=0x400000@0xf5a00000 "
 
 # Reset usb and prepare it for kernel.
