@@ -9,6 +9,7 @@ export ARCH=${ARCH:-"arm64"}
 export CROSS_COMPILE=${CROSS_COMPILE:-"aarch64-linux-gnu-"}
 export CPUS=${CPUS:-$(($(nproc) - 1))}
 export SLD0=${SLD0:-"BUILD_VER_SUFFIX=SLD0"}
+export ATF_BRANCH=${ATF_BRANCH:-"switch-v3-atf2.6"}
 
 prepare() {
 	[[ ! -d "${out}" ]] && \
@@ -38,9 +39,9 @@ prepare() {
 			python3 \
 			python3-distutils \
 			python3-dev \
+			python2-dev \
+			python2 \
 			swig \
-			python \
-			python-dev \
 			bc \
 			curl \
 			libncurses5-dev \
@@ -95,6 +96,10 @@ prepare() {
 	fi
 	
 	git submodule update --init --recursive .
+
+	# Use ATF branch
+	cd "${out}/switch-coreboot/3rdparty/arm-trusted-firmware"
+	git checkout ${ATF_BRANCH}
 
 	if [[ -n "${PATCH}" ]]; then
 		git apply "${cwd}/assets/patch/coreboot_emc_oc.patch"
