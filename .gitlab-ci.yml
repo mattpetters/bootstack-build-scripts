@@ -32,6 +32,11 @@ fedora-build:
   variables:
     DISTRO: fedora
 
+fedora-nouveau-build:
+  extends: .build
+  variables:
+    DISTRO: fedoranouveau
+
 focal-build:
   extends: .build
   variables:
